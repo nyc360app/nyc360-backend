@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <LangVersion>14</LangVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Folder Include="Common\Behaviours\" />
+      <Folder Include="Common\Mappings\" />
+      <Folder Include="Features\Events\Queries\" />
+      <Folder Include="Features\PostComments\Queries\" />
+      <Folder Include="Features\SavedPosts\Commands\" />
+      <Folder Include="Models\Location\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="AutoMapper" Version="15.1.0" />
+      <PackageReference Include="FluentValidation" Version="12.1.0" />
+      <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.0" />
+      <PackageReference Include="MediatR" Version="13.1.0" />
+      <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.0" />
+      <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\NYC360.Domain\NYC360.Domain.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="FastEndpoints">
+        <HintPath>..\..\..\..\..\..\..\..\home\mohagear\.nuget\packages\fastendpoints\7.1.1\lib\net10.0\FastEndpoints.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
+</Project>

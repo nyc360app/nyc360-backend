@@ -1,0 +1,79 @@
+using Microsoft.AspNetCore.Http;
+using NYC360.Domain.Enums.Housing;
+using NYC360.Domain.Wrappers;
+using MediatR;
+
+namespace NYC360.Application.Features.Housing.Commands.UpdateRent;
+
+public record UpdateRentHouseListingCommand(
+    int UserId,
+    int Id,
+    HousingType HouseType,
+    
+    // Availability
+    DateTime MoveInDate,
+    DateTime? MoveOutDate,
+    PropertyType PropertyType,
+    
+    // Location
+    string Borough,
+    string ZipCode,
+    int MaxOccupants,
+    
+    //Address
+    string Neighborhood,
+    string? FullAddress,
+    string? UnitNumber,
+    string? GoogleMap,
+    List<NearbyTransportation>? NearbyTransportation,
+    int Bedrooms,
+    int Bathrooms,
+    int MonthlyRent,
+    int? SecurityDeposit,
+    int? BrokerFee,
+    int? MonthlyCostRange,
+    
+    // Key details
+    BuildingType BuildingType,
+    
+    int? BuiltIn,
+    int? RenovatedIn,
+    int? Sqft,
+    string? FloorLevel,
+    
+    HeatingSystem Heating,
+    CoolingSystem Cooling,
+    TemperatureControl TemperatureControl,
+    
+    List<LaundryType> Laundry,
+    List<HousingAmenities> Amenities,
+    
+    bool ShortTermStayAllowed,
+    bool ShortStayEligiblity,
+    bool Furnished,
+    bool AcceptsHousingVouchers,
+    bool FamilyAndKidsFriendly,
+    bool PetsFriendly,
+    bool AccessibilityFriendly,
+    bool SmokingAllowed,
+    
+    List<RentHousingProgram> AcceptedHousingPrograms,
+    string Description,
+    
+    // Renting Details
+    LeaseType LeaseType,
+    RentPrivacyType PrivacyType,
+    
+    // Shared Unit Details
+    RentBathroomType SharedBathroomType,
+    RentKitchenType SharedKitchenType,
+    string? AboutCurrentResident,
+    string? UnitRulesAndPolicies,
+    string? RoommatesGroupChat,
+    bool AddDirectApplyLink,
+    List<IFormFile>? NewPhotos,
+    List<int>? DeletedPhotoIds,
+    List<int>? CoListing,
+    bool? AllowColisterEditing,
+    bool IsPublished
+) : IRequest<StandardResponse>;

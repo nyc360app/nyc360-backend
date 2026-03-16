@@ -1,0 +1,27 @@
+** Divisions
+
+- App (all => feedback / support(tickets))
+- Art (all => art related posts and activities)
+- Community (User => all community related posts and activities, Org => post initiatives)
+- Culture (all => culture related posts and activities)
+- Education (All => all community related posts and activities, Org => post educational programs)
+- Events (Org => post events, User => book events)
+- Lifestyle (all => lifestyle related posts and activities)
+- Media (all => media related posts and activities)
+- News (only orgs and verified journalists and press, user => articles needs verification by admins
+- Recruitment (Org => job post, user => job application)
+- Social (User => all community related posts and activities, Org => post initiatives)
+- TV (user => request to cover specific event/interview/media coverage)
+
+for events:
+= money get to our account
+= org sees their balance
+= org checkout their balance after a set number of days after event is over
+
+for job posts:
+- show number of applicants
+- cover letter for users (optional/recommended)
+- user application (one time fill)
+
+note: all posts or initiatives get to ask for event posting as well
+note: all long posts suggests to be an article instead of a post

@@ -1,0 +1,23 @@
+using NYC360.Application.Features.Communities.Commands.ProcessJoinRequest;
+using NYC360.API.Models.Communities;
+using NYC360.Domain.Wrappers;
+using NYC360.API.Extensions;
+using FastEndpoints;
+using MediatR;
+
+namespace NYC360.API.Endpoints.Public.Communities;
+
+public class ApproveJoinRequestEndpoint(IMediator mediator) : Endpoint<ProcessJoinRequestRequest, StandardResponse>
+{
+    public override void Configure()
+    {
+        Post("/communities/{CommunityId}/requests/{TargetUserId}/approve");
+    }
+
+    public override async Task HandleAsync(ProcessJoinRequestRequest req, CancellationToken ct)
+    {
+        var result = await mediator.Send(new ProcessJoinRequestCommand(
+            User.GetId()!.Value, req.CommunityId, req.TargetUserId, true), ct);
+        await Send.OkAsync(result, ct);
+    }
+}

@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <LangVersion>14</LangVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="FastEndpoints" Version="7.1.1" />
+        <PackageReference Include="FastEndpoints.Security" Version="7.1.1" />
+        <PackageReference Include="FastEndpoints.Swagger" Version="7.1.1" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\NYC360.Application\NYC360.Application.csproj" />
+      <ProjectReference Include="..\NYC360.Infrastructure\NYC360.Infrastructure.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Middleware\" />
+      <Folder Include="wwwroot\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="wwwroot\communities\292d81b0-05f9-4304-befa-e550d30dca77.png" />
+      <_ContentIncludedByDefault Remove="wwwroot\communities\2db0f320-fde1-4f02-a52a-59ff139041e8.png" />
+      <_ContentIncludedByDefault Remove="wwwroot\housing\6be9e59b-9ef0-4da6-ad63-b3264d0a22cb.jpg" />
+      <_ContentIncludedByDefault Remove="wwwroot\housing\ac31e0eb-5b34-43f3-9a0c-9bcfcff4e150.jpg" />
+      <_ContentIncludedByDefault Remove="wwwroot\housing\authorizations\3b4dd364-3a66-485f-a2d1-85768abb3225.jpeg	" />
+      <_ContentIncludedByDefault Remove="wwwroot\housing\b2919951-e8fe-4877-8f2e-9f0de9fdcb4a.jpg" />
+      <_ContentIncludedByDefault Remove="wwwroot\housing\cfd61655-1953-4946-9008-4af214d27272.jpg" />
+    </ItemGroup>
+
+</Project>

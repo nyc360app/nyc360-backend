@@ -1,0 +1,83 @@
+note app fee per ticket (currently set to 0)
+make a plan for future development (scaling)
+
+1- Who can create an event?
+ in excel sheet, only orgs can make paid events
+ 
+2- Can events have multiple organizers or collaborators (in the future or now)?
+ok, make it scalable
+
+3- What permissions does the organizer have after event creation?
+depends is it's the main orgnizer or the co-org
+
+4- Can admins override organizer actions (edit, cancel, approve)?
+yes, put a time stamp on the flag for review(priotity based)
+
+5 - Does events need approval?
+    if so can it be edited after it's approved?
+no, it's live immediately'
+6- Is “Event Completed flag” automatic (based on time) or manual?
+x-time delay before delisting 
+7- Can an event be completely free?
+    if so can it still require ticket registration?
+yes, with limits
+8- Can a paid event have:
+ - free tickets?
+ - Mixed pricing tiers?
+ - Discounts?
+  - promo-codes
+  - pay at door
+ 
+ - if so Is an event considered “paid” if any tier costs money?
+ - Can ticket prices or tiers change after publication? yes
+
+9- Is there a limit to how many tickets a user can buy per event?
+10- Can a user buy multiple tickets for the same tier?
+based on org, per tier
+
+11- Can a ticket be refunded?
+yes, since the money won't be wired to org until x amount of days after event
+12- Can a user mark “Going” without owning a ticket?
+    or does buying a ticket automatically mark the user as “Going”?
+yes, if you buy you are going by default
+if a user didn't buy a ticket yet, gets marked as interseted, when they buy a ticket they are marked as going
+13- Do we handle on-site attendance verification (via QR code)?
+not now, maybe in the future
+14- Can events be reported by users?
+15- Can admins:
+     - Hide events?
+     - Delete events?
+     - Suspend organizers? strikes 
+     
+16- What happens to existing tickets if an event is removed by admins?
+refunded
+17- Should past events remain visible?
+yes, past events button, filter and search
+18- Do we need “featured” or promoted events?
+featured based on user interests, promoted plan for the future
+19- Are private / invite-only events planned?
+yes, make access private unlisted(by password / by approval / by special URL / no security) / public / draft
+
+
+
+
+
+# Phase 1 – MVP (Now)
+Free + Paid events
+Ticketing
+Attendance
+Basic moderation
+Organizer wallets
+Refunds
+Admin dashboards
+
+# Phase 2 – Scale (Near Future)
+Scheduled payouts
+Promo codes
+Featured events
+Soft-delete + archival
+QR check-in & Offline scanning
+Multi-day events
+Seat selection
+Organization verification
+Strike-based organizer trust score
