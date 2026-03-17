@@ -131,6 +131,7 @@ The project incorporates a variety of features spanning multiple functional doma
 *   **Utility Services:**
     *   Slug Generation for user-friendly URLs.
     *   Local Storage Service for handling file storage.
+    *   
 
 ## Code Structure and Style
 
