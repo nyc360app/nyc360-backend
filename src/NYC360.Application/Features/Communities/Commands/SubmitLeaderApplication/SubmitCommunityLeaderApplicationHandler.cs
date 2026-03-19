@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using NYC360.Application.Contracts.Persistence;
 using NYC360.Application.Contracts.Storage;
 using NYC360.Domain.Dtos.Communities;
@@ -77,7 +76,7 @@ public class SubmitCommunityLeaderApplicationHandler(
             return StandardResponse<CommunityLeaderApplicationSubmissionDto>.Success(
                 new CommunityLeaderApplicationSubmissionDto(entity.Id, entity.Status, entity.CreatedAt));
         }
-        catch (DbUpdateException ex) when (IsPendingDuplicateViolation(ex))
+        catch (Exception ex) when (IsPendingDuplicateViolation(ex))
         {
             localStorageService.DeleteFile(savedFileName, FilesSubfolder);
 
@@ -164,9 +163,18 @@ public class SubmitCommunityLeaderApplicationHandler(
         return null;
     }
 
-    private static bool IsPendingDuplicateViolation(DbUpdateException ex)
+    private static bool IsPendingDuplicateViolation(Exception ex)
     {
-        return ex.Message.Contains(PendingApplicationIndexName, StringComparison.OrdinalIgnoreCase) ||
-               (ex.InnerException?.Message?.Contains(PendingApplicationIndexName, StringComparison.OrdinalIgnoreCase) ?? false);
+        Exception? current = ex;
+
+        while (current != null)
+        {
+            if (current.Message.Contains(PendingApplicationIndexName, StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            current = current.InnerException;
+        }
+
+        return false;
     }
 }
