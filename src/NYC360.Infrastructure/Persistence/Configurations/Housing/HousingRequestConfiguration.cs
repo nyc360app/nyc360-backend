@@ -18,6 +18,6 @@ public class HousingRequestConfiguration : IEntityTypeConfiguration<HousingReque
         builder.HasOne(x => x.User)
             .WithMany()
             .HasForeignKey(x => x.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.NoAction);
     }
 }

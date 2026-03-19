@@ -2883,7 +2883,7 @@ namespace NYC360.Infrastructure.Persistence.Migrations
                     b.HasOne("NYC360.Domain.Entities.User.UserProfile", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("HouseInfo");
 

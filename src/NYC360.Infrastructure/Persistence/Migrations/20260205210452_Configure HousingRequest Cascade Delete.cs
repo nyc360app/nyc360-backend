@@ -19,8 +19,7 @@ namespace NYC360.Infrastructure.Persistence.Migrations
                 table: "HousingRequests",
                 column: "UserId",
                 principalTable: "UserProfiles",
-                principalColumn: "UserId",
-                onDelete: ReferentialAction.Cascade);
+                principalColumn: "UserId");
         }
 
         /// <inheritdoc />
