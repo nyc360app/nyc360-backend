@@ -1,6 +1,7 @@
 using NYC360.Infrastructure.Persistence.DbContexts;
 using NYC360.Application.Contracts.Persistence;
 using NYC360.Domain.Dtos.Communities;
+using NYC360.Domain.Dtos.News;
 using NYC360.Domain.Dtos.Professions;
 using Microsoft.EntityFrameworkCore;
 using NYC360.Domain.Entities.Posts;
@@ -52,10 +53,12 @@ public sealed class PostRepository(ApplicationDbContext db) : IPostRepository
         return await ProjectToPostDto(baseQuery, userId).FirstOrDefaultAsync(ct);
     }
 
-    public async Task<PostDetailsDto?> GetPostWithDetailsDtoByIdAsync(int id, int? userId, CancellationToken ct)
+    public async Task<PostDetailsDto?> GetPostWithDetailsDtoByIdAsync(int id, int? userId, bool includeUnapproved, CancellationToken ct)
     {
         // 1. Fetch the main Post DTO using your existing projection logic
         var baseQuery = db.Posts.AsNoTracking().Where(p => p.Id == id);
+        if (!includeUnapproved)
+            baseQuery = baseQuery.Where(p => p.IsApproved);
         var postDto = await ProjectToPostDto(baseQuery, userId).FirstOrDefaultAsync(ct);
     
         if (postDto == null) return null;
@@ -94,9 +97,12 @@ public sealed class PostRepository(ApplicationDbContext db) : IPostRepository
         return new PostDetailsDto(postDto, commentDtos, relatedPosts);
     }
 
-    public async Task<(List<PostDto>, int)> GetAllPaginatedAsync(int page, int pageSize, int? userId, Category? category, string? search, PostType? postType, PostSource? sourceType, int? authorId, CancellationToken ct)
+    public async Task<(List<PostDto>, int)> GetAllPaginatedAsync(int page, int pageSize, int? userId, Category? category, string? search, PostType? postType, PostSource? sourceType, int? authorId, bool includeUnapproved, CancellationToken ct)
     {
         var baseQuery = db.Posts.AsQueryable();
+
+        if (!includeUnapproved)
+            baseQuery = baseQuery.Where(p => p.IsApproved);
 
         // 1. Filtering Logic
         if (category is not null) baseQuery = baseQuery.Where(p => p.Category == category);
@@ -129,7 +135,7 @@ public sealed class PostRepository(ApplicationDbContext db) : IPostRepository
         // 1. Define the base filtered query
         var baseQuery = db.Posts
             .AsNoTracking()
-            .Where(p => p.CommunityId == communityId);
+            .Where(p => p.CommunityId == communityId && p.IsApproved);
     
         // 2. Get the count from the filtered base query
         var totalCount = await baseQuery.CountAsync(ct);
@@ -160,6 +166,7 @@ public sealed class PostRepository(ApplicationDbContext db) : IPostRepository
         var baseQuery = db.Posts
             .AsNoTracking()
             // Filter posts to only those whose Category matches a user's interest
+            .Where(p => p.IsApproved)
             .Where(p => userInterests.Contains(p.Category));
 
         // --- 2. Calculate Total Count ---
@@ -185,6 +192,7 @@ public sealed class PostRepository(ApplicationDbContext db) : IPostRepository
         // 1. Filter posts that belong to the provided community IDs
         var baseQuery = db.Posts
             .AsNoTracking()
+            .Where(p => p.IsApproved)
             .Where(p => p.CommunityId != null && communityIds.Contains(p.CommunityId.Value));
 
         // 2. Count total results for pagination
@@ -204,6 +212,7 @@ public sealed class PostRepository(ApplicationDbContext db) : IPostRepository
         // 1. Start with the raw Entity query
         var query = db.Posts
             .AsNoTracking()
+            .Where(p => p.IsApproved)
             .OrderByDescending(p => p.CreatedAt); // 2. Sort BEFORE projecting
 
         // 3. Project to DTO last
@@ -219,6 +228,7 @@ public sealed class PostRepository(ApplicationDbContext db) : IPostRepository
             // 1. Filter raw entities + Exclude already seen IDs
             var query = db.Posts
                 .AsNoTracking()
+                .Where(p => p.IsApproved)
                 .Where(p => p.Category == category && !excludeIds.Contains(p.Id))
                 .OrderByDescending(p => p.CreatedAt)
                 .Take(postsPerCategory);
@@ -239,6 +249,7 @@ public sealed class PostRepository(ApplicationDbContext db) : IPostRepository
     {
         var query = db.Posts
             .AsNoTracking()
+            .Where(p => p.IsApproved)
             .Where(p => !excludedCategories.Contains(p.Category) && !excludeIds.Contains(p.Id))
             .OrderByDescending(p => p.CreatedAt) 
             .Take(count);
@@ -262,6 +273,7 @@ public sealed class PostRepository(ApplicationDbContext db) : IPostRepository
         // 1. Prepare the base query (No Includes needed here)
         var query = db.Posts
             .AsNoTracking() // Recommended for read-only queries
+            .Where(p => p.IsApproved)
             .Where(p => p.AuthorId == userId)
             .OrderByDescending(p => p.CreatedAt)
             .Take(count);
@@ -278,6 +290,7 @@ public sealed class PostRepository(ApplicationDbContext db) : IPostRepository
     {
         var query = db.Posts
             .AsNoTracking()
+            .Where(p => p.IsApproved)
             .Where(p => !division.HasValue || p.Category == division)
             .OrderByDescending(p => p.CreatedAt)
             .Take(limit);
@@ -290,6 +303,7 @@ public sealed class PostRepository(ApplicationDbContext db) : IPostRepository
 
         var query = db.Posts
             .AsNoTracking()
+            .Where(p => p.IsApproved)
             .Where(p => !division.HasValue || p.Category == division)
             .Where(p => p.CreatedAt >= oneMonthAgo)
             // FEATURED LOGIC: 
@@ -311,6 +325,7 @@ public sealed class PostRepository(ApplicationDbContext db) : IPostRepository
     {
         var query = db.Posts
             .AsNoTracking()
+            .Where(p => p.IsApproved)
             .Where(p => !division.HasValue || p.Category == division)
             // Simple Trending Algorithm: (Likes * 2) + Comments + Shares
             // Filtered by posts from the last 7 days to keep it "Fresh"
@@ -325,10 +340,13 @@ public sealed class PostRepository(ApplicationDbContext db) : IPostRepository
     }
     public async Task<List<string>> GetTrendingTagsAsync(int count, CancellationToken ct)
     {
-        return await db.Tags
+        return await db.Posts
             .AsNoTracking()
-            .OrderByDescending(t => t.Posts.Count) // Order by usage
-            .Select(t => t.Name)
+            .Where(p => p.IsApproved)
+            .SelectMany(p => p.Tags)
+            .GroupBy(t => t.Name)
+            .OrderByDescending(g => g.Count())
+            .Select(g => g.Key)
             .Take(count)
             .ToListAsync(ct);
     }
@@ -361,6 +379,7 @@ public sealed class PostRepository(ApplicationDbContext db) : IPostRepository
 
         // 2. Start with a query that filters posts having this tag
         var baseQuery = db.Posts
+            .Where(p => p.IsApproved)
             .Where(p => p.Tags.Any(t => t.Name == normalizedTag));
 
         var totalCount = await baseQuery.CountAsync(ct);
@@ -381,12 +400,75 @@ public sealed class PostRepository(ApplicationDbContext db) : IPostRepository
     {
         var query = db.Posts
             .AsNoTracking()
+            .Where(p => p.IsApproved)
             .Where(p => !div.HasValue || p.Category == div)
             .Where(p => p.Title!.Contains(term) || p.Content!.Contains(term) || p.Tags.Any(t => t.Name.Contains(term)))
             .OrderByDescending(p => p.CreatedAt)
             .Take(limit);
 
         return await ProjectToPostDto(query, userId).ToListAsync(ct);
+    }
+
+    public async Task<(List<NewsSubmissionDto>, int)> GetPendingNewsSubmissionsAsync(int page, int pageSize, string? search, CancellationToken ct)
+    {
+        var query = db.Posts
+            .AsNoTracking()
+            .Where(p => p.Category == Category.News)
+            .Where(p => p.SourceType == PostSource.User)
+            .Where(p => p.ModerationStatus == PostModerationStatus.Pending);
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            search = search.Trim();
+            query = query.Where(p =>
+                EF.Functions.Like(p.Title!, $"%{search}%") ||
+                EF.Functions.Like(p.Content!, $"%{search}%") ||
+                (p.Author != null && EF.Functions.Like(p.Author.FirstName + " " + p.Author.LastName!, $"%{search}%")));
+        }
+
+        var total = await query.CountAsync(ct);
+
+        var items = await query
+            .OrderByDescending(p => p.CreatedAt)
+            .Select(p => new NewsSubmissionDto(
+                p.Id,
+                p.Title,
+                p.Content!,
+                p.Author != null
+                    ? new UserMinimalInfoDto(
+                        p.Author.UserId,
+                        p.Author.User!.UserName!,
+                        p.Author.FirstName + " " + p.Author.LastName!,
+                        p.Author.AvatarUrl,
+                        p.Author.User.Type)
+                    : null,
+                p.Location != null
+                    ? new LocationDto(
+                        p.Location.Id,
+                        p.Location.Borough,
+                        p.Location.Code,
+                        p.Location.NeighborhoodNet,
+                        p.Location.Neighborhood,
+                        p.Location.ZipCode)
+                    : null,
+                p.Topic != null
+                    ? new TopicDto
+                    {
+                        Id = p.Topic.Id,
+                        Name = p.Topic.Name,
+                        Category = p.Topic.Category
+                    }
+                    : null,
+                p.CreatedAt,
+                p.LastUpdated,
+                p.ModerationStatus,
+                p.ModerationNote
+            ))
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(ct);
+
+        return (items, total);
     }
 
     public async Task<List<Tag>> EnsureTagsExistAsync(List<string> tagNames, CancellationToken ct)
@@ -541,6 +623,7 @@ public sealed class PostRepository(ApplicationDbContext db) : IPostRepository
     {
         var baseQuery = db.Posts
             .AsNoTracking()
+            .Where(p => p.IsApproved)
             .Where(p => categories.Contains(p.Category));
 
         return ProjectToPostDto(baseQuery, userId)

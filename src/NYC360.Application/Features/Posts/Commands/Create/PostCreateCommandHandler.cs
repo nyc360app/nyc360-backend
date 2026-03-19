@@ -1,4 +1,5 @@
 using NYC360.Application.Contracts.Persistence;
+using NYC360.Application.Contracts.Services;
 using NYC360.Application.Contracts.Storage;
 using Microsoft.AspNetCore.Identity;
 using NYC360.Domain.Entities.Posts;
@@ -15,6 +16,7 @@ public class PostCreateCommandHandler(
     ILocationRepository locationRepository,
     ITagRepository tagRepository,
     ITopicRepository topicRepository,
+    INewsAuthorizationService newsAuthorizationService,
     UserManager<ApplicationUser> userManager,
     RoleManager<ApplicationRole> roleManager,
     IUnitOfWork unitOfWork,
@@ -46,8 +48,28 @@ public class PostCreateCommandHandler(
         // Checks if the user's profile contains a tag belonging to the requested Category/Division
         bool isStaff = roleName == "SuperAdmin" || roleName == "Admin";
         bool isEligible = isStaff;
+        bool autoApprove = true;
 
-        if (!isEligible)
+        if (request.Category == Domain.Enums.Category.News)
+        {
+            var newsAccess = await newsAuthorizationService.GetAccessAsync(request.UserId, cancellationToken);
+            if (newsAccess == null || !newsAccess.CanSubmitContent)
+            {
+                return StandardResponse<PostDto>.Failure(
+                    new ApiError("news.forbidden", "You do not have a verified News department badge to submit news content."));
+            }
+
+            if (request.Type != PostType.News)
+            {
+                return StandardResponse<PostDto>.Failure(
+                    new ApiError("news.invalid_post_type", "News division posts must use the News post type."));
+            }
+
+            isEligible = true;
+            autoApprove = newsAccess.CanPublishContent;
+        }
+
+        if (!isEligible && request.Category != Domain.Enums.Category.News)
         {
             isEligible = await tagRepository.UserHasTagForDivisionAsync(request.UserId, request.Category, cancellationToken);
         }
@@ -105,7 +127,9 @@ public class PostCreateCommandHandler(
             Content = request.Content,
             AuthorId = request.UserId,
             LocationId = request.LocationId == 0 ? null : request.LocationId,
-            IsApproved = true,
+            IsApproved = autoApprove,
+            ModerationStatus = autoApprove ? PostModerationStatus.Approved : PostModerationStatus.Pending,
+            ModeratedAt = autoApprove ? DateTime.UtcNow : null,
             CreatedAt = DateTime.UtcNow,
             LastUpdated = DateTime.UtcNow
         };

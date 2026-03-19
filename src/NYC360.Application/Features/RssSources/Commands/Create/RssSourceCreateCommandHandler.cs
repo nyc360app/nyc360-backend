@@ -1,5 +1,4 @@
 using NYC360.Application.Contracts.Persistence;
-using NYC360.Application.Contracts.Rss;
 using NYC360.Domain.Entities;
 using MediatR;
 using NYC360.Domain.Wrappers;
@@ -14,11 +13,16 @@ public class RssSourceCreateCommandHandler(
 {
     public async Task<StandardResponse> Handle(RssSourceCreateCommand request, CancellationToken cancellationToken)
     {
-        var urlExists = await rssSourceRepo.ExistsAsync(request.Url, cancellationToken);
+        var normalizedUrl = request.Url.Trim();
+        var normalizedName = request.Name.Trim();
+        var normalizedDescription = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim();
+        var normalizedImageUrl = string.IsNullOrWhiteSpace(request.ImageUrl) ? null : request.ImageUrl.Trim();
+
+        var urlExists = await rssSourceRepo.ExistsAsync(normalizedUrl, cancellationToken);
         if (urlExists)
             return StandardResponse.Failure(new ApiError("rss.url_duplicate", "RSS URL already exists."));
 
-        string? imageUrl = request.ImageUrl;
+        string? imageUrl = normalizedImageUrl;
         if (request.Image is not null)
         {
             imageUrl = await storageService.SaveFileAsync(request.Image, "rss-feeds", cancellationToken);
@@ -26,10 +30,10 @@ public class RssSourceCreateCommandHandler(
 
         var entity = new RssFeedSource
         {
-            Name = request.Name,
-            RssUrl = request.Url,
+            Name = normalizedName,
+            RssUrl = normalizedUrl,
             Category = request.Category,
-            Description = request.Description,
+            Description = normalizedDescription,
             ImageUrl = imageUrl,
             IsActive = true
         };

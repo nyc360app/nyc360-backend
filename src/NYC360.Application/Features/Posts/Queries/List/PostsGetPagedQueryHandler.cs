@@ -19,6 +19,7 @@ public class PostsGetPagedQueryHandler(IPostRepository postRepository)
             request.PostType,
             request.SourceType,
             null, // authorId (this is a general list query)
+            request.IncludeUnapproved,
             ct);
 
         return PagedResponse<PostDto>.Create(

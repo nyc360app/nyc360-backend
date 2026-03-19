@@ -28,6 +28,10 @@ public class Post
     // Stats
     public PostStats? Stats { get; set; } = new PostStats();
     public bool IsApproved { get; set; }
+    public PostModerationStatus ModerationStatus { get; set; } = PostModerationStatus.Approved;
+    public string? ModerationNote { get; set; }
+    public DateTime? ModeratedAt { get; set; }
+    public int? ModeratedByUserId { get; set; }
     
     // Date
     public DateTime CreatedAt { get; set; }

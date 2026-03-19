@@ -11,7 +11,7 @@ public class RssSourceGetAllQueryHandler(
 {
     public async Task<StandardResponse<List<RssSourceDto>>> Handle(RssSourceGetAllQuery request, CancellationToken ct)
     {
-        var list = await rssRepo.GetAllAsync(ct);
+        var list = await rssRepo.GetAllAsync(request.Category, ct);
         var dtos = list.Select(RssSourceDto.Map).ToList();
         return StandardResponse<List<RssSourceDto>>.Success(dtos);
     }

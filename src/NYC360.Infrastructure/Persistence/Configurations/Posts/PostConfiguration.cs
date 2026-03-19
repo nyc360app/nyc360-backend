@@ -31,6 +31,13 @@ public class PostConfiguration : IEntityTypeConfiguration<Post>
         builder.Property(p => p.LastUpdated)
             .IsRequired();
 
+        builder.Property(p => p.ModerationStatus)
+            .HasDefaultValue(NYC360.Domain.Enums.Posts.PostModerationStatus.Approved)
+            .IsRequired();
+
+        builder.Property(p => p.ModerationNote)
+            .HasMaxLength(1000);
+
         // Post → PostStats (1:1)
         builder.HasOne(p => p.Stats)
             .WithOne(ps => ps.Post)
@@ -89,5 +96,7 @@ public class PostConfiguration : IEntityTypeConfiguration<Post>
             .WithMany(t => t.Posts)
             .HasForeignKey(p => p.TopicId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(p => new { p.Category, p.ModerationStatus, p.SourceType });
     }
 }

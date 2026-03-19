@@ -13,5 +13,6 @@ public record PostsGetPagedQuery(
     Category? Category,
     string? Search,
     PostType? PostType,
-    PostSource? SourceType
+    PostSource? SourceType,
+    bool IncludeUnapproved = false
 ) : IRequest<PagedResponse<PostDto>>;

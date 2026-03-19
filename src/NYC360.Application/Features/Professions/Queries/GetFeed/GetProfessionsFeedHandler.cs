@@ -27,6 +27,7 @@ public class GetProfessionsFeedHandler(
             null,
             null, // sourceType
             null, // authorId
+            false,
             ct);
 
         // 2. Separate Hero from Grid

@@ -13,18 +13,22 @@ public class GetCommonHomeQueryHandler(
 {
     public async Task<StandardResponse<DivisionHomeDto>> Handle(GetCommonHomeQuery request, CancellationToken ct)
     {
-        // Fetch buckets in parallel for speed
-        var featured = await postRepo.GetFeaturedPostsAsync(request.Division, request.UserId, request.Limit, ct);
-        var latest = await postRepo.GetLatestPostsAsync(request.Division, request.UserId, request.Limit, ct);
-        var trending = await postRepo.GetTrendingPostsAsync(request.Division, request.UserId, request.Limit, ct);
-        
-        var tags = await tagRepository.GetTagsByDivisionAsync(request.Division!.Value, ct);
+        if (request.Division is null)
+            return StandardResponse<DivisionHomeDto>.Failure(
+                new ApiError("division.required", "Division is required."));
+
+        var featuredTask = postRepo.GetFeaturedPostsAsync(request.Division, request.UserId, request.Limit, ct);
+        var latestTask = postRepo.GetLatestPostsAsync(request.Division, request.UserId, request.Limit, ct);
+        var trendingTask = postRepo.GetTrendingPostsAsync(request.Division, request.UserId, request.Limit, ct);
+        var tagsTask = tagRepository.GetTagsByDivisionAsync(request.Division.Value, ct);
+
+        await Task.WhenAll(featuredTask, latestTask, trendingTask, tagsTask);
 
         return StandardResponse<DivisionHomeDto>.Success(new DivisionHomeDto(
-            featured,
-            latest,
-            trending,
-            tags.Select(t => t.Map()).ToList()
+            await featuredTask,
+            await latestTask,
+            await trendingTask,
+            (await tagsTask).Select(t => t.Map()).ToList()
         ));
     }
 }

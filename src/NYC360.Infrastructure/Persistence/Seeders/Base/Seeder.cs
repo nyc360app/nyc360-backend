@@ -11,7 +11,8 @@ public static class Seeder
             new ResidentRoleSeeder(),
             new OrganizationRoleSeeder(),
             new VisitorRoleSeeder(),
-            new TopicSeeder()
+            new TopicSeeder(),
+            new NewsTagSeeder()
         };
 
         foreach (var seeder in seeders)

@@ -8,4 +8,5 @@ namespace NYC360.Application.Features.RssSources.Queries.GetRequests;
 public record GetRssConnectionRequestsQuery(
     int PageNumber, 
     int PageSize, 
-    RssConnectionStatus? Status) : IRequest<PagedResponse<RssConnectionRequestDto>>;
+    RssConnectionStatus? Status,
+    Category? Category = null) : IRequest<PagedResponse<RssConnectionRequestDto>>;

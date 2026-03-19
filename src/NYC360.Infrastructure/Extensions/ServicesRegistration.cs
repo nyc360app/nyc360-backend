@@ -26,6 +26,7 @@ public static class ServicesRegistration
         services.AddScoped<IOauthGoogleService, OauthGoogleService>();
         services.AddScoped<IRssFeedService, RssFeedService>();
         services.AddScoped<ICommunityPermissionService, CommunityPermissionService>();
+        services.AddScoped<INewsAuthorizationService, NewsAuthorizationService>();
         services.AddScoped<IStripeService, StripeService>();
 
         services.AddSingleton<ILocalStorageService, LocalStorageService>();

@@ -32,7 +32,7 @@ public sealed class RssFeedService(
 
    public async Task FetchAllFeedDataAsync(CancellationToken ct)
     {
-        var sources = await sourceRepository.GetAllAsync(ct);
+        var sources = await sourceRepository.GetAllAsync(null, ct);
         if (sources.Count == 0) return;
 
         logger.LogInformation("📝 Starting Scoped Parallel RSS Fetch for {Count} sources", sources.Count);

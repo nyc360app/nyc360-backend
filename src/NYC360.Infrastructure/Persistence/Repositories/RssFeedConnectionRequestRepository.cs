@@ -16,8 +16,17 @@ public class RssFeedConnectionRequestRepository(ApplicationDbContext dbContext)
                 .ThenInclude(x => x!.User)
             .ToListAsync(ct);
     }
+
+    public async Task<bool> HasPendingRequestAsync(string url, Category category, CancellationToken ct)
+    {
+        return await dbContext.RssFeedConnectionRequests.AnyAsync(
+            x => x.Category == category
+                 && x.Status == RssConnectionStatus.Pending
+                 && x.Url == url,
+            ct);
+    }
     
-    public async Task<(IReadOnlyList<RssFeedConnectionRequest> Items, int Count)> GetPagedRequestsAsync(int pageNumber, int pageSize, RssConnectionStatus? status, CancellationToken ct)
+    public async Task<(IReadOnlyList<RssFeedConnectionRequest> Items, int Count)> GetPagedRequestsAsync(int pageNumber, int pageSize, RssConnectionStatus? status, Category? category, CancellationToken ct)
     {
         var query = dbContext.RssFeedConnectionRequests
             .Include(x => x.Requester)
@@ -27,6 +36,11 @@ public class RssFeedConnectionRequestRepository(ApplicationDbContext dbContext)
         if (status.HasValue)
         {
             query = query.Where(x => x.Status == status.Value);
+        }
+
+        if (category.HasValue)
+        {
+            query = query.Where(x => x.Category == category.Value);
         }
 
         query = query.OrderByDescending(x => x.CreatedAt);

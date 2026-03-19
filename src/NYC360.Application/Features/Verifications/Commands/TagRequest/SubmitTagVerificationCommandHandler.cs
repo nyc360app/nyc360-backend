@@ -67,13 +67,25 @@ public class SubmitTagVerificationCommandHandler(
         if (IsVerifiable(tag))
             return tag;
 
-        if (!CommunityVerificationTags.TryGetName(requestedTagId, out var tagName))
+        var tagName = ResolveStableTagName(requestedTagId);
+        if (tagName == null)
             return null;
 
-        tag = await tagRepository.GetByNameAsync(tagName!, ct);
+        tag = await tagRepository.GetByNameAsync(tagName, ct);
         return IsVerifiable(tag) ? tag : null;
     }
 
     private static bool IsVerifiable(Tag? tag)
         => tag is not null && (tag.Type == TagType.Identity || tag.Type == TagType.Professional);
+
+    private static string? ResolveStableTagName(int tagId)
+    {
+        if (CommunityVerificationTags.TryGetName(tagId, out var communityTagName))
+            return communityTagName;
+
+        if (NewsDepartmentTags.TryGetName(tagId, out var newsTagName))
+            return newsTagName;
+
+        return null;
+    }
 }

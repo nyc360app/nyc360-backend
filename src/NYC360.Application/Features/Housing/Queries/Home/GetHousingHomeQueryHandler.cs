@@ -26,6 +26,7 @@ public class GetHousingHomeQueryHandler(
             postType: null,
             sourceType: PostSource.Rss,
             authorId: null,
+            includeUnapproved: false,
             ct: ct);
             
         var hero = heroResult.Item1.FirstOrDefault();
@@ -48,12 +49,12 @@ public class GetHousingHomeQueryHandler(
         
         // 4. Fetch RSS Feed (News/Updates)
         var rss = await postRepository.GetAllPaginatedAsync(
-            1, 10, request.UserId, Category.Housing, null, null, PostSource.Rss, null, ct
+            1, 10, request.UserId, Category.Housing, null, null, PostSource.Rss, null, false, ct
         );
         
         // 5. Fetch Discussions (Standard text posts in Housing category)
         var discussions = await postRepository.GetAllPaginatedAsync(
-            1, 5, request.UserId, Category.Housing, null, PostType.Normal, PostSource.User, null, ct
+            1, 5, request.UserId, Category.Housing, null, PostType.Normal, PostSource.User, null, false, ct
         );
         
         // 6. "All Posts" - a mix of the latest activity

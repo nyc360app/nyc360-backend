@@ -1,8 +1,11 @@
 using NYC360.Application.Contracts.Persistence;
+using NYC360.Application.Contracts.Services;
 using NYC360.Application.Contracts.Storage;
 using MediatR;
 using NYC360.Domain.Entities.Posts;
 using NYC360.Domain.Wrappers;
+using NYC360.Domain.Enums;
+using NYC360.Domain.Enums.Posts;
 
 namespace NYC360.Application.Features.Posts.Commands.UserEdit;
 
@@ -10,6 +13,7 @@ public class PostUpdateUserCommandHandler(
     IPostRepository postRepository,
     ITagRepository tagRepository, // Added to verify tags if needed
     ITopicRepository topicRepository,
+    INewsAuthorizationService newsAuthorizationService,
     ILocalStorageService storageService,
     IUnitOfWork unitOfWork
 ) : IRequestHandler<PostUpdateUserCommand, StandardResponse>
@@ -50,6 +54,24 @@ public class PostUpdateUserCommandHandler(
         }
 
         post.LastUpdated = DateTime.UtcNow;
+
+        if (request.Category == Category.News || post.Category == Category.News)
+        {
+            var newsAccess = await newsAuthorizationService.GetAccessAsync(request.UserId, ct);
+            if (newsAccess == null || !newsAccess.CanSubmitContent)
+                return StandardResponse.Failure(new("news.forbidden", "You do not have a verified News department badge to edit news content."));
+
+            if (request.Category == Category.News)
+            {
+                post.IsApproved = newsAccess.CanPublishContent;
+                post.ModerationStatus = newsAccess.CanPublishContent
+                    ? PostModerationStatus.Approved
+                    : PostModerationStatus.Pending;
+                post.ModeratedAt = newsAccess.CanPublishContent ? DateTime.UtcNow : null;
+                post.ModeratedByUserId = newsAccess.CanPublishContent ? request.UserId : null;
+                post.ModerationNote = newsAccess.CanPublishContent ? "Auto-approved by publisher authority." : null;
+            }
+        }
 
         // 4. Handle Tags (Sync Logic)
         if (request.TagIds != null)

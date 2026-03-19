@@ -16,10 +16,18 @@ public class RssSourceUpdateCommandHandler(
         if (entity is null)
             return StandardResponse.Failure(new ApiError("rss.notfound", "RSS source not found."));
 
-        entity.Name = req.Name;
-        entity.RssUrl = req.RssUrl;
+        var normalizedUrl = req.RssUrl.Trim();
+        if (!string.Equals(entity.RssUrl, normalizedUrl, StringComparison.OrdinalIgnoreCase))
+        {
+            var exists = await repo.ExistsAsync(normalizedUrl, ct);
+            if (exists)
+                return StandardResponse.Failure(new ApiError("rss.url_duplicate", "RSS URL already exists."));
+        }
+
+        entity.Name = string.IsNullOrWhiteSpace(req.Name) ? null : req.Name.Trim();
+        entity.RssUrl = normalizedUrl;
         entity.Category = req.Category;
-        entity.Description = req.Description;
+        entity.Description = string.IsNullOrWhiteSpace(req.Description) ? null : req.Description.Trim();
         entity.IsActive = req.IsActive;
 
         if (req.Image != null)

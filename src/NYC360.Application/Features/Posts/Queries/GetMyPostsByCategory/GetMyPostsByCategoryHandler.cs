@@ -19,6 +19,7 @@ public class GetMyPostsByCategoryHandler(IPostRepository postRepository)
             null, // postType
             null, // sourceType
             request.UserId, // authorId (filtering for ONLY current user's posts)
+            true,
             ct);
 
         var result = PagedResponse<PostDto>.Create(posts, request.Page, request.PageSize, totalCount);

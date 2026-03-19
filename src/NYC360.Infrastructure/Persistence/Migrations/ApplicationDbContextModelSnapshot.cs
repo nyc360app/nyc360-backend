@@ -1315,6 +1315,21 @@ namespace NYC360.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("LastUpdated")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("ModeratedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ModeratedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ModerationNote")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<byte>("ModerationStatus")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint")
+                        .HasDefaultValue((byte)1);
+
                     b.Property<int?>("LocationId")
                         .HasColumnType("int");
 
@@ -1345,6 +1360,8 @@ namespace NYC360.Infrastructure.Persistence.Migrations
                     b.HasIndex("AuthorId");
 
                     b.HasIndex("CommunityId");
+
+                    b.HasIndex("Category", "ModerationStatus", "SourceType");
 
                     b.HasIndex("LocationId");
 

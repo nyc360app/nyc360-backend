@@ -13,7 +13,7 @@ public class GetRssConnectionRequestsQueryHandler(
 {
     public async Task<PagedResponse<RssConnectionRequestDto>> Handle(GetRssConnectionRequestsQuery request, CancellationToken cancellationToken)
     {
-        var (items, count) = await requestRepo.GetPagedRequestsAsync(request.PageNumber, request.PageSize, request.Status, cancellationToken);
+        var (items, count) = await requestRepo.GetPagedRequestsAsync(request.PageNumber, request.PageSize, request.Status, request.Category, cancellationToken);
 
         var dtos = items.Select(x => new RssConnectionRequestDto(
                 x.Id,

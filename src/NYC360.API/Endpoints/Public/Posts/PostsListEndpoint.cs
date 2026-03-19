@@ -24,7 +24,8 @@ public class PostsListEndpoint(IMediator mediator) : Endpoint<PostsGetPagedReque
             req.Category,
             req.Search,
             req.PostType,
-            req.SourceType
+            req.SourceType,
+            false
         );
 
         var result = await mediator.Send(query, ct);

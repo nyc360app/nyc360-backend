@@ -17,7 +17,7 @@ public class GetPostByIdEndpoint(IMediator mediator) : Endpoint<GetPostDetailsRe
     
     public override async Task HandleAsync(GetPostDetailsRequest req, CancellationToken ct)
     {
-        var query = new PostGetDetailsQuery(req.PostId, User.GetId());
+        var query = new PostGetDetailsQuery(req.PostId, User.GetId(), true);
         var result = await mediator.Send(query, ct);
         await Send.OkAsync(result, ct);
     }

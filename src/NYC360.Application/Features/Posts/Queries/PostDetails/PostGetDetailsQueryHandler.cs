@@ -10,7 +10,7 @@ public class PostGetDetailsQueryHandler(IPostRepository postRepository)
 {
     public async Task<StandardResponse<PostDetailsDto>> Handle(PostGetDetailsQuery request, CancellationToken ct)
     {
-        var post = await postRepository.GetPostWithDetailsDtoByIdAsync(request.Id, request.UserId, ct);
+        var post = await postRepository.GetPostWithDetailsDtoByIdAsync(request.Id, request.UserId, request.IncludeUnapproved, ct);
         if (post is null)
             return StandardResponse<PostDetailsDto>.Failure(new ApiError("post.notfound", "Post not found."));
         

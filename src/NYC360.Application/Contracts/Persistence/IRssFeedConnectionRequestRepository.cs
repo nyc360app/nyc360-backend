@@ -6,5 +6,6 @@ namespace NYC360.Application.Contracts.Persistence;
 public interface IRssFeedConnectionRequestRepository : IGenericRepository<RssFeedConnectionRequest>
 {
     Task<IReadOnlyList<RssFeedConnectionRequest>> GetAllWithDetailsAsync(CancellationToken ct);
-    Task<(IReadOnlyList<RssFeedConnectionRequest> Items, int Count)> GetPagedRequestsAsync(int pageNumber, int pageSize, RssConnectionStatus? status, CancellationToken ct);
+    Task<bool> HasPendingRequestAsync(string url, Category category, CancellationToken ct);
+    Task<(IReadOnlyList<RssFeedConnectionRequest> Items, int Count)> GetPagedRequestsAsync(int pageNumber, int pageSize, RssConnectionStatus? status, Category? category, CancellationToken ct);
 }
