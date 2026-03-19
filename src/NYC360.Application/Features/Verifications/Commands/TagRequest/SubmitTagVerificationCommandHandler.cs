@@ -1,5 +1,6 @@
 using NYC360.Application.Contracts.Persistence;
 using NYC360.Application.Contracts.Storage;
+using NYC360.Domain.Constants;
 using NYC360.Domain.Entities.Tags;
 using NYC360.Domain.Enums.Tags;
 using NYC360.Domain.Wrappers;
@@ -18,19 +19,21 @@ public class SubmitTagVerificationCommandHandler(
 {
     public async Task<StandardResponse> Handle(SubmitTagVerificationCommand request, CancellationToken ct)
     {
-        // 1. Verify Tag exists and is Verifiable (Identity or Professional)
-        var tag = await tagRepository.GetByIdAsync(request.TagId);
-        if (tag == null || (tag.Type != TagType.Identity && tag.Type != TagType.Professional))
+        // Accept the stable tag IDs and gracefully resolve known legacy community IDs by name.
+        var tag = await ResolveVerifiableTagAsync(request.TagId, ct);
+        if (tag == null)
         {
             return StandardResponse.Failure(new ApiError("tag.not_found", "Tag not found."));
         }
 
+        var tagId = tag.Id;
+
         // 2. Check if user already has this tag
-        var alreadyHasTag = await verificationRepository.UserHasSpecificTagAsync(request.UserId, request.TagId, ct);
+        var alreadyHasTag = await verificationRepository.UserHasSpecificTagAsync(request.UserId, tagId, ct);
         if (alreadyHasTag) return StandardResponse.Failure(new ApiError("tag.already_exists", "User already has this tag."));
 
         // 3. Check for existing pending request
-        var hasPending = await verificationRepository.HasPendingRequestAsync(request.UserId, request.TagId, ct);
+        var hasPending = await verificationRepository.HasPendingRequestAsync(request.UserId, tagId, ct);
         if (hasPending) return StandardResponse.Failure(new ApiError("tag.verification_pending", "A verification request for this tag already exists."));
 
         // 4. Save file to PRIVATE storage (not public wwwroot)
@@ -41,7 +44,7 @@ public class SubmitTagVerificationCommandHandler(
         var verificationRequest = new TagVerificationRequest
         {
             UserId = request.UserId,
-            TargetTagId = request.TagId,
+            TargetTagId = tagId,
             Reason = request.Reason,
             Status = VerificationStatus.Pending,
             CreatedAt = DateTime.UtcNow
@@ -57,4 +60,20 @@ public class SubmitTagVerificationCommandHandler(
 
         return StandardResponse.Success();
     }
+
+    private async Task<Tag?> ResolveVerifiableTagAsync(int requestedTagId, CancellationToken ct)
+    {
+        var tag = await tagRepository.GetByIdAsync(requestedTagId);
+        if (IsVerifiable(tag))
+            return tag;
+
+        if (!CommunityVerificationTags.TryGetName(requestedTagId, out var tagName))
+            return null;
+
+        tag = await tagRepository.GetByNameAsync(tagName!, ct);
+        return IsVerifiable(tag) ? tag : null;
+    }
+
+    private static bool IsVerifiable(Tag? tag)
+        => tag is not null && (tag.Type == TagType.Identity || tag.Type == TagType.Professional);
 }
