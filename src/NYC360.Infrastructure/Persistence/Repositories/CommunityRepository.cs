@@ -274,6 +274,11 @@ public sealed class CommunityRepository(ApplicationDbContext context) : ICommuni
         await context.CommunityDisbandRequests.AddAsync(request, ct);
     }
 
+    public async Task AddLeaderApplicationAsync(CommunityLeaderApplication application, CancellationToken ct)
+    {
+        await context.CommunityLeaderApplications.AddAsync(application, ct);
+    }
+
     public async Task<CommunityDisbandRequest?> GetDisbandRequestByIdAsync(int id, CancellationToken ct)
     {
         return await context.CommunityDisbandRequests
@@ -324,6 +329,12 @@ public sealed class CommunityRepository(ApplicationDbContext context) : ICommuni
     {
         return await context.CommunityDisbandRequests
             .AnyAsync(r => r.CommunityId == communityId && r.Status == DisbandRequestStatus.Pending, ct);
+    }
+
+    public async Task<bool> HasPendingLeaderApplicationAsync(int userId, CancellationToken ct)
+    {
+        return await context.CommunityLeaderApplications
+            .AnyAsync(x => x.UserId == userId && x.Status == CommunityLeaderApplicationStatus.Pending, ct);
     }
 
     public void UpdateDisbandRequest(CommunityDisbandRequest request)

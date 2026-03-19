@@ -18,11 +18,21 @@ jobs:
       - name: Build
         run: dotnet build --configuration Release --no-restore
 
+      - name: Test with .NET
+        run: dotnet test --configuration Release --no-build
+
+      - name: Install dotnet-ef
+        run: dotnet tool install --global dotnet-ef --version 10.*
+
+      - name: Add .NET tools to PATH
+        shell: pwsh
+        run: echo "$env:USERPROFILE\.dotnet\tools" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Apply database migrations
+        run: dotnet ef database update --project src/NYC360.Infrastructure --startup-project src/NYC360.API --configuration Release --no-build
+
       - name: Publish
         run: dotnet publish --configuration Release --output ./publish --runtime win-x86 
-        
-      - name: Test with .NET
-        run: dotnet test
 
       - name: Deploy to MonsterASP.NET via WebDeploy
         uses: rasmusbuchholdt/simply-web-deploy@2.1.0

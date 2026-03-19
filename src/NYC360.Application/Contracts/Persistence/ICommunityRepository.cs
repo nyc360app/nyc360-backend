@@ -46,6 +46,8 @@ public interface ICommunityRepository
     Task<(List<CommunityDisbandRequest>, int)> GetDisbandRequestsPaginatedAsync(DisbandRequestStatus? status, int page, int pageSize, CancellationToken ct);
     Task<bool> HasPendingDisbandRequestAsync(int communityId, CancellationToken ct);
     void UpdateDisbandRequest(CommunityDisbandRequest request);
+    Task AddLeaderApplicationAsync(CommunityLeaderApplication application, CancellationToken ct);
+    Task<bool> HasPendingLeaderApplicationAsync(int userId, CancellationToken ct);
     
     // Admin dashboard methods
     Task<(List<Community>, int)> GetAllCommunitiesPaginatedAsync(string? searchTerm, CommunityType? type, int? locationId, bool? hasDisbandRequest, int page, int pageSize, CancellationToken ct);

@@ -73,6 +73,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<CommunityMember> CommunityMembers { get; set; }
     public DbSet<CommunityJoinRequest> CommunityJoinRequests { get; set; }
     public DbSet<CommunityDisbandRequest> CommunityDisbandRequests { get; set; }
+    public DbSet<CommunityLeaderApplication> CommunityLeaderApplications { get; set; }
     
     // professions
     public DbSet<JobOffer> JobOffers { get; set; }
