@@ -4,7 +4,9 @@ using NYC360.Domain.Constants;
 using NYC360.Domain.Dtos.News;
 using NYC360.Domain.Dtos.Tags;
 using NYC360.Domain.Enums;
+using NYC360.Domain.Enums.Tags;
 using NYC360.Domain.Enums.Users;
+using NYC360.Domain.Entities.Tags;
 
 namespace NYC360.Infrastructure.Services;
 
@@ -39,6 +41,10 @@ public class NewsAuthorizationService(IUserRepository userRepository) : INewsAut
         var canListNewsOrganizationInSpace = isStaff
             || (profile.User.Type == UserType.Organization && tagNames.Contains(NewsDepartmentTags.ListNewsOrganizationInSpaceName));
         var grantedKeys = BuildGrantedKeys(isStaff, canSubmitContent, canListNewsOrganizationInSpace, tagNames);
+        var grantedNewsTagDtos = BuildGrantedNewsTags(
+            grantedNewsTags,
+            isStaff,
+            canListNewsOrganizationInSpace);
 
         return new NewsAccessDto(
             isStaff,
@@ -50,7 +56,7 @@ public class NewsAuthorizationService(IUserRepository userRepository) : INewsAut
             canReviewRssRequests,
             canListNewsOrganizationInSpace,
             grantedKeys,
-            grantedNewsTags.Select(tag => tag.Map()).ToList()
+            grantedNewsTagDtos
         );
     }
 
@@ -100,5 +106,47 @@ public class NewsAuthorizationService(IUserRepository userRepository) : INewsAut
             keys.Add(NewsDepartmentKeys.NewsOrganizationLocationListingKey);
 
         return keys.ToList();
+    }
+
+    private static List<TagDto> BuildGrantedNewsTags(
+        List<Tag> actualGrantedNewsTags,
+        bool isStaff,
+        bool canListNewsOrganizationInSpace)
+    {
+        var effectiveTags = actualGrantedNewsTags
+            .Select(tag => tag.Map())
+            .ToDictionary(tag => tag.Id);
+
+        if (!isStaff)
+            return effectiveTags.Values.ToList();
+
+        // Staff bypasses News badge checks across the feature set. Surface the effective
+        // operational badges as well so clients that still gate by badge presence stay aligned
+        // with the backend authorization result.
+        AddSyntheticTag(effectiveTags, NewsDepartmentTags.PublisherBadgeId, NewsDepartmentTags.PublisherBadgeName);
+        AddSyntheticTag(effectiveTags, NewsDepartmentTags.AssistantPublisherBadgeId, NewsDepartmentTags.AssistantPublisherBadgeName);
+        AddSyntheticTag(effectiveTags, NewsDepartmentTags.JournalistBadgeId, NewsDepartmentTags.JournalistBadgeName);
+        AddSyntheticTag(effectiveTags, NewsDepartmentTags.AuthorBadgeId, NewsDepartmentTags.AuthorBadgeName);
+        AddSyntheticTag(effectiveTags, NewsDepartmentTags.DocumentorBadgeId, NewsDepartmentTags.DocumentorBadgeName);
+        AddSyntheticTag(effectiveTags, NewsDepartmentTags.ContributorBadgeId, NewsDepartmentTags.ContributorBadgeName);
+        AddSyntheticTag(effectiveTags, NewsDepartmentTags.TraineeJournalistBadgeId, NewsDepartmentTags.TraineeJournalistBadgeName);
+
+        if (canListNewsOrganizationInSpace)
+        {
+            AddSyntheticTag(
+                effectiveTags,
+                NewsDepartmentTags.ListNewsOrganizationInSpaceId,
+                NewsDepartmentTags.ListNewsOrganizationInSpaceName);
+        }
+
+        return effectiveTags.Values.OrderBy(tag => tag.Id).ToList();
+    }
+
+    private static void AddSyntheticTag(Dictionary<int, TagDto> effectiveTags, int id, string name)
+    {
+        if (effectiveTags.ContainsKey(id))
+            return;
+
+        effectiveTags[id] = new TagDto(id, name, TagType.Professional, Category.News, null, null);
     }
 }
