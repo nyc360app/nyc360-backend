@@ -312,9 +312,9 @@ public sealed class PostRepository(ApplicationDbContext db) : IPostRepository
             // 3. Subtract 'Age' factor (newer posts score higher)
             .OrderByDescending(p => 
                 //(p.IsFeatured ? 1000 : 0) +  // Todo in the future, consider adding a "Featured" flag to the DB
-                (p.Stats.Likes * 5) + 
-                (p.Stats.Comments * 3) + 
-                (p.Stats.Shares * 2))
+                ((p.Stats != null ? p.Stats.Likes : 0) * 5) + 
+                ((p.Stats != null ? p.Stats.Comments : 0) * 3) + 
+                ((p.Stats != null ? p.Stats.Shares : 0) * 2))
             .ThenByDescending(p => p.CreatedAt)
             .Take(limit);
 
@@ -331,9 +331,9 @@ public sealed class PostRepository(ApplicationDbContext db) : IPostRepository
             // Filtered by posts from the last 7 days to keep it "Fresh"
             .Where(p => p.CreatedAt >= DateTime.UtcNow.AddDays(-7))
             .OrderByDescending(p => 
-                (p.Stats.Likes * 3) + 
-                (p.Stats.Comments * 2) + 
-                p.Stats.Shares)
+                ((p.Stats != null ? p.Stats.Likes : 0) * 3) + 
+                ((p.Stats != null ? p.Stats.Comments : 0) * 2) + 
+                (p.Stats != null ? p.Stats.Shares : 0))
             .Take(limit);
 
         return await ProjectToPostDto(query, userId).ToListAsync(ct);

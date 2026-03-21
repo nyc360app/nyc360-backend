@@ -17,18 +17,18 @@ public class GetCommonHomeQueryHandler(
             return StandardResponse<DivisionHomeDto>.Failure(
                 new ApiError("division.required", "Division is required."));
 
-        var featuredTask = postRepo.GetFeaturedPostsAsync(request.Division, request.UserId, request.Limit, ct);
-        var latestTask = postRepo.GetLatestPostsAsync(request.Division, request.UserId, request.Limit, ct);
-        var trendingTask = postRepo.GetTrendingPostsAsync(request.Division, request.UserId, request.Limit, ct);
-        var tagsTask = tagRepository.GetTagsByDivisionAsync(request.Division.Value, ct);
-
-        await Task.WhenAll(featuredTask, latestTask, trendingTask, tagsTask);
+        // These repositories share the same scoped DbContext, so these reads must stay sequential.
+        // Running them in parallel causes EF Core to throw "A second operation was started on this context..."
+        var featured = await postRepo.GetFeaturedPostsAsync(request.Division, request.UserId, request.Limit, ct);
+        var latest = await postRepo.GetLatestPostsAsync(request.Division, request.UserId, request.Limit, ct);
+        var trending = await postRepo.GetTrendingPostsAsync(request.Division, request.UserId, request.Limit, ct);
+        var tags = await tagRepository.GetTagsByDivisionAsync(request.Division.Value, ct);
 
         return StandardResponse<DivisionHomeDto>.Success(new DivisionHomeDto(
-            await featuredTask,
-            await latestTask,
-            await trendingTask,
-            (await tagsTask).Select(t => t.Map()).ToList()
+            featured,
+            latest,
+            trending,
+            tags.Select(t => t.Map()).ToList()
         ));
     }
 }
