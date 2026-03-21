@@ -28,6 +28,9 @@ project.lock.json
 project.fragment.lock.json
 artifacts/
 
+.venv
+.venv-newsqa
+
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
 
