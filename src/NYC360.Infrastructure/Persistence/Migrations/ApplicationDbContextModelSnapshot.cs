@@ -2514,6 +2514,315 @@ namespace NYC360.Infrastructure.Persistence.Migrations
                     b.ToTable("VerificationDocuments");
                 });
 
+            modelBuilder.Entity("NYC360.Domain.Entities.SpaceListings.SpaceListing", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AssignedReviewerUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("BusinessIndustry")
+                        .HasColumnType("int");
+
+                    b.Property<bool?>("BusinessIsInsured")
+                        .HasColumnType("bit");
+
+                    b.Property<bool?>("BusinessIsLicensedInNyc")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("BusinessOwnershipType")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("BusinessServiceArea")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("BusinessServices")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("BusinessSize")
+                        .HasColumnType("int");
+
+                    b.Property<string>("BuildingNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Borough")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Categories")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("ClaimedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ContactName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte>("Department")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<byte>("EntityType")
+                        .HasColumnType("tinyint");
+
+                    b.Property<bool>("IsClaimingOwnership")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastPublishAttemptAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastPublishError")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("LocationId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("LocationName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ModerationNote")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("NameNormalized")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Neighborhood")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("OrganizationFundType")
+                        .HasColumnType("int");
+
+                    b.Property<bool?>("OrganizationIsNysRegistered")
+                        .HasColumnType("bit");
+
+                    b.Property<bool?>("OrganizationIsTaxExempt")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("OrganizationServices")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("OrganizationType")
+                        .HasColumnType("int");
+
+                    b.Property<byte>("OwnershipStatus")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneNumberNormalized")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PublicEmail")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PublicEmailNormalized")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ReviewedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SpaceEntityType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SpaceItemId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("SpacePublishedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SpaceSlug")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte>("Status")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("Street")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("SubmitterUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SubmitterNote")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("Tags")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Website")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("WebsiteNormalized")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ZipCode")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignedReviewerUserId");
+
+                    b.HasIndex("ClaimedByUserId");
+
+                    b.HasIndex("ReviewedByUserId");
+
+                    b.HasIndex("SubmitterUserId");
+
+                    b.ToTable("SpaceListings");
+                });
+
+            modelBuilder.Entity("NYC360.Domain.Entities.SpaceListings.SpaceListingAttachment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ContentType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FileName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long?>("SizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("SpaceListingId")
+                        .HasColumnType("int");
+
+                    b.Property<byte>("Type")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SpaceListingId");
+
+                    b.ToTable("SpaceListingAttachments");
+                });
+
+            modelBuilder.Entity("NYC360.Domain.Entities.SpaceListings.SpaceListingHour", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("int");
+
+                    b.Property<TimeOnly?>("CloseTime")
+                        .HasColumnType("time");
+
+                    b.Property<bool>("IsClosed")
+                        .HasColumnType("bit");
+
+                    b.Property<TimeOnly?>("OpenTime")
+                        .HasColumnType("time");
+
+                    b.Property<int>("SpaceListingId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SpaceListingId");
+
+                    b.ToTable("SpaceListingHours");
+                });
+
+            modelBuilder.Entity("NYC360.Domain.Entities.SpaceListings.SpaceListingReviewEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte>("FromStatus")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ReviewerUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SpaceListingId")
+                        .HasColumnType("int");
+
+                    b.Property<byte>("ToStatus")
+                        .HasColumnType("tinyint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReviewerUserId");
+
+                    b.HasIndex("SpaceListingId");
+
+                    b.ToTable("SpaceListingReviewEntries");
+                });
+
+            modelBuilder.Entity("NYC360.Domain.Entities.SpaceListings.SpaceListingSocialLink", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<byte>("Platform")
+                        .HasColumnType("tinyint");
+
+                    b.Property<int>("SpaceListingId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SpaceListingId");
+
+                    b.ToTable("SpaceListingSocialLinks");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
                 {
                     b.HasOne("NYC360.Domain.Entities.User.ApplicationRole", null)
@@ -2573,6 +2882,87 @@ namespace NYC360.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Location");
+                });
+
+            modelBuilder.Entity("NYC360.Domain.Entities.SpaceListings.SpaceListing", b =>
+                {
+                    b.HasOne("NYC360.Domain.Entities.User.UserProfile", "AssignedReviewer")
+                        .WithMany()
+                        .HasForeignKey("AssignedReviewerUserId");
+
+                    b.HasOne("NYC360.Domain.Entities.User.UserProfile", "ClaimedByUser")
+                        .WithMany()
+                        .HasForeignKey("ClaimedByUserId");
+
+                    b.HasOne("NYC360.Domain.Entities.User.UserProfile", "ReviewedBy")
+                        .WithMany()
+                        .HasForeignKey("ReviewedByUserId");
+
+                    b.HasOne("NYC360.Domain.Entities.User.UserProfile", "Submitter")
+                        .WithMany()
+                        .HasForeignKey("SubmitterUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AssignedReviewer");
+
+                    b.Navigation("ClaimedByUser");
+
+                    b.Navigation("ReviewedBy");
+
+                    b.Navigation("Submitter");
+                });
+
+            modelBuilder.Entity("NYC360.Domain.Entities.SpaceListings.SpaceListingAttachment", b =>
+                {
+                    b.HasOne("NYC360.Domain.Entities.SpaceListings.SpaceListing", "SpaceListing")
+                        .WithMany("Attachments")
+                        .HasForeignKey("SpaceListingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SpaceListing");
+                });
+
+            modelBuilder.Entity("NYC360.Domain.Entities.SpaceListings.SpaceListingHour", b =>
+                {
+                    b.HasOne("NYC360.Domain.Entities.SpaceListings.SpaceListing", "SpaceListing")
+                        .WithMany("Hours")
+                        .HasForeignKey("SpaceListingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SpaceListing");
+                });
+
+            modelBuilder.Entity("NYC360.Domain.Entities.SpaceListings.SpaceListingReviewEntry", b =>
+                {
+                    b.HasOne("NYC360.Domain.Entities.User.UserProfile", "Reviewer")
+                        .WithMany()
+                        .HasForeignKey("ReviewerUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("NYC360.Domain.Entities.SpaceListings.SpaceListing", "SpaceListing")
+                        .WithMany("ReviewEntries")
+                        .HasForeignKey("SpaceListingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Reviewer");
+
+                    b.Navigation("SpaceListing");
+                });
+
+            modelBuilder.Entity("NYC360.Domain.Entities.SpaceListings.SpaceListingSocialLink", b =>
+                {
+                    b.HasOne("NYC360.Domain.Entities.SpaceListings.SpaceListing", "SpaceListing")
+                        .WithMany("SocialLinks")
+                        .HasForeignKey("SpaceListingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SpaceListing");
                 });
 
             modelBuilder.Entity("NYC360.Domain.Entities.Communities.CommunityDisbandRequest", b =>
@@ -3505,6 +3895,17 @@ namespace NYC360.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("NYC360.Domain.Entities.Professions.JobOffer", b =>
                 {
                     b.Navigation("Applications");
+                });
+
+            modelBuilder.Entity("NYC360.Domain.Entities.SpaceListings.SpaceListing", b =>
+                {
+                    b.Navigation("Attachments");
+
+                    b.Navigation("Hours");
+
+                    b.Navigation("ReviewEntries");
+
+                    b.Navigation("SocialLinks");
                 });
 
             modelBuilder.Entity("NYC360.Domain.Entities.Tags.Tag", b =>
