@@ -10,6 +10,7 @@ public static class Seeder
             new SuperAdminUserSeeder(),
             new ResidentRoleSeeder(),
             new OrganizationRoleSeeder(),
+            new BusinessRoleSeeder(),
             new VisitorRoleSeeder(),
             new TopicSeeder(),
             new NewsTagSeeder()

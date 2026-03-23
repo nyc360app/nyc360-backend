@@ -42,6 +42,8 @@ public static class RepositoryRegistration
         services.AddScoped<IHousingRequestRepository, HousingRequestRepository>();
         services.AddScoped<IHouseInfoRepository, HouseInfoRepository>();
         services.AddScoped<IHouseListingAuthorizationRepository, HouseListingAuthorizationRepository>();
+
+        services.AddScoped<ISpaceListingRepository, SpaceListingRepository>();
         
         services.AddScoped<IForumRepository, ForumRepository>();
         services.AddScoped<IForumQuestionRepository, ForumQuestionRepository>();

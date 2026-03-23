@@ -5,23 +5,21 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using NYC360.Domain.Constants;
 using System.Security.Claims;
-using NYC360.Domain.Entities;
 using NYC360.Domain.Entities.User;
 
 namespace NYC360.Infrastructure.Persistence.Seeders;
 
-public class OrganizationRoleSeeder : ISeeder
+public class BusinessRoleSeeder : ISeeder
 {
     public async Task SeedAsync(IServiceProvider services)
     {
         using var scope = services.CreateScope();
         var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
-        var logger = scope.ServiceProvider.GetRequiredService<ILogger<OrganizationRoleSeeder>>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<BusinessRoleSeeder>>();
         
-        const string roleName = "Organization";
+        const string roleName = "Business";
         const int contentLimit = 5000;
 
-        // Ensure role exists
         var role = await roleManager.FindByNameAsync(roleName);
         if (role == null)
         {
@@ -29,9 +27,9 @@ public class OrganizationRoleSeeder : ISeeder
             await roleManager.CreateAsync(role);
             logger.LogInformation("Created role: {Role}", roleName);
         }
-        
-        // Assign permissions to role
-        List<string> permissions = [
+
+        List<string> permissions =
+        [
             Permissions.Posts.Create,
             Permissions.Posts.Comment,
             Permissions.Posts.Interact,
@@ -40,11 +38,11 @@ public class OrganizationRoleSeeder : ISeeder
         
         foreach (var permission in permissions)
         {
-            if (!await roleManager.RoleHasClaimAsync(role, Permissions.PermissionClaimType, permission))
-            {
-                await roleManager.AddClaimAsync(role, new Claim(Permissions.PermissionClaimType, permission));
-                logger.LogInformation("Assigned permission {Permission} to role {Role}", permission, roleName);
-            }
+            if (await roleManager.RoleHasClaimAsync(role, Permissions.PermissionClaimType, permission))
+                continue;
+            
+            await roleManager.AddClaimAsync(role, new Claim(Permissions.PermissionClaimType, permission));
+            logger.LogInformation("Assigned permission {Permission} to role {Role}", permission, roleName);
         }
     }
 }

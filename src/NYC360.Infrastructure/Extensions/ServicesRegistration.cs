@@ -12,8 +12,8 @@ using NYC360.Application.Contracts;
 using NYC360.Infrastructure.Cache;
 using NYC360.Infrastructure.OAuth;
 using NYC360.Infrastructure.RSS;
-using NYC360.Application.Contracts.Infrastructure;
 using NYC360.Infrastructure.Stripe;
+using NYC360.Application.Contracts.Infrastructure;
 
 namespace NYC360.Infrastructure.Extensions;
 
@@ -28,6 +28,7 @@ public static class ServicesRegistration
         services.AddScoped<ICommunityPermissionService, CommunityPermissionService>();
         services.AddScoped<INewsAuthorizationService, NewsAuthorizationService>();
         services.AddScoped<IStripeService, StripeService>();
+        services.AddHttpClient<ISpaceIntegrationService, SpaceIntegrationService>();
 
         services.AddSingleton<ILocalStorageService, LocalStorageService>();
         services.AddSingleton<IPasswordHasher, PasswordHasher>();

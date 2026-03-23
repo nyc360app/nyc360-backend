@@ -12,6 +12,7 @@ using NYC360.Domain.Entities.Tags;
 using NYC360.Domain.Entities.Forums;
 using NYC360.Domain.Entities;
 using NYC360.Domain.Entities.Topics;
+using NYC360.Domain.Entities.SpaceListings;
 
 namespace NYC360.Infrastructure.Persistence.DbContexts;
 
@@ -89,6 +90,13 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<HouseListingAuthorization> HouseListingAuthorizations { get; set; }
     public DbSet<HouseListingAuthorizationAvailability> HouseListingAuthorizationAvailabilities { get; set; }
     public DbSet<HouseListingAuthorizationAttachment> HouseListingAuthorizationAttachments { get; set; }
+
+    // Space Listings
+    public DbSet<SpaceListing> SpaceListings { get; set; }
+    public DbSet<SpaceListingAttachment> SpaceListingAttachments { get; set; }
+    public DbSet<SpaceListingSocialLink> SpaceListingSocialLinks { get; set; }
+    public DbSet<SpaceListingHour> SpaceListingHours { get; set; }
+    public DbSet<SpaceListingReviewEntry> SpaceListingReviewEntries { get; set; }
     
     // forums
     public DbSet<Forum> Forums { get; set; }

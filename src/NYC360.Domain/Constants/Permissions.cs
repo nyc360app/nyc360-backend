@@ -100,6 +100,16 @@ public static class Permissions
         public const string View = "Permissions.Housing.View";
         public const string Edit = "Permissions.Housing.Edit";
     }
+
+    public static class SpaceListings
+    {
+        public const string Submit = "Permissions.SpaceListings.Submit";
+        public const string View = "Permissions.SpaceListings.View";
+        public const string Review = "Permissions.SpaceListings.Review";
+        public const string Approve = "Permissions.SpaceListings.Approve";
+        public const string Assign = "Permissions.SpaceListings.Assign";
+        public const string Publish = "Permissions.SpaceListings.Publish";
+    }
     
     public static class Forums
     {

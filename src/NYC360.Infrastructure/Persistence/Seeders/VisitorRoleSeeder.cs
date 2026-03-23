@@ -33,7 +33,8 @@ public class VisitorRoleSeeder : ISeeder
         List<string> permissions = [
             Permissions.Posts.Create,
             Permissions.Posts.Comment,
-            Permissions.Posts.Interact
+            Permissions.Posts.Interact,
+            Permissions.SpaceListings.Submit
         ];
         
         foreach (var permission in permissions)
