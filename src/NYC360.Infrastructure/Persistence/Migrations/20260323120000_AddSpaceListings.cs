@@ -173,7 +173,7 @@ namespace NYC360.Infrastructure.Persistence.Migrations
                         column: x => x.ReviewerUserId,
                         principalTable: "UserProfiles",
                         principalColumn: "UserId",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(

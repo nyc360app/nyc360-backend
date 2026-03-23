@@ -2940,7 +2940,7 @@ namespace NYC360.Infrastructure.Persistence.Migrations
                     b.HasOne("NYC360.Domain.Entities.User.UserProfile", "Reviewer")
                         .WithMany()
                         .HasForeignKey("ReviewerUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("NYC360.Domain.Entities.SpaceListings.SpaceListing", "SpaceListing")
