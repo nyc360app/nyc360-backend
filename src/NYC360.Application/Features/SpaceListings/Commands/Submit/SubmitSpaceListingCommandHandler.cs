@@ -91,7 +91,7 @@ public class SubmitSpaceListingCommandHandler(
             ContactName = request.ContactName?.Trim(),
             SubmitterNote = request.SubmitterNote?.Trim(),
             IsClaimingOwnership = request.IsClaimingOwnership,
-            Categories = request.Categories ?? [],
+            Categories = SpaceListingDepartmentPolicy.BuildCategories(request.Department, request.Categories),
             Tags = request.Tags ?? [],
             BusinessIndustry = request.BusinessIndustry,
             BusinessSize = request.BusinessSize,

@@ -67,7 +67,7 @@ public class UpdateSpaceListingCommandHandler(
         listing.OwnershipStatus = request.IsClaimingOwnership ? SpaceListingOwnershipStatus.Requested : SpaceListingOwnershipStatus.None;
         if (!request.IsClaimingOwnership)
             listing.ClaimedByUserId = null;
-        listing.Categories = request.Categories ?? [];
+        listing.Categories = SpaceListingDepartmentPolicy.BuildCategories(request.Department, request.Categories);
         listing.Tags = request.Tags ?? [];
         listing.BusinessIndustry = request.BusinessIndustry;
         listing.BusinessSize = request.BusinessSize;

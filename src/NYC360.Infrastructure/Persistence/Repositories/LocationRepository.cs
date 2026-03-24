@@ -11,8 +11,84 @@ public sealed class LocationRepository(ApplicationDbContext context) : ILocation
 {
     public async Task<Location?> GetOrCreateLocationAsync(LocationDto dto, CancellationToken ct)
     {
-        // For now, returning null as per existing implementation or until needed
-        return null;
+        if (dto.Id is > 0)
+        {
+            var byId = await context.Locations.FirstOrDefaultAsync(x => x.Id == dto.Id.Value, ct);
+            if (byId != null)
+                return byId;
+        }
+
+        var borough = Normalize(dto.Borough);
+        var code = Normalize(dto.Code);
+        var neighborhoodNet = Normalize(dto.NeighborhoodNet);
+        var neighborhood = Normalize(dto.Neighborhood);
+        var zipCode = dto.ZipCode;
+
+        // Prefer deterministic match by zip + names.
+        IQueryable<Location> query = context.Locations.AsQueryable();
+        if (zipCode > 0)
+            query = query.Where(x => x.ZipCode == zipCode);
+
+        if (!string.IsNullOrWhiteSpace(neighborhood))
+        {
+            var n = neighborhood!;
+            query = query.Where(x => x.Neighborhood != null && x.Neighborhood.ToLower() == n);
+        }
+        else if (!string.IsNullOrWhiteSpace(neighborhoodNet))
+        {
+            var nn = neighborhoodNet!;
+            query = query.Where(x => x.NeighborhoodNet != null && x.NeighborhoodNet.ToLower() == nn);
+        }
+
+        if (!string.IsNullOrWhiteSpace(borough))
+        {
+            var b = borough!;
+            query = query.Where(x => x.Borough != null && x.Borough.ToLower() == b);
+        }
+
+        var existing = await query.FirstOrDefaultAsync(ct);
+        if (existing != null)
+            return existing;
+
+        // Fallback by names/code when zip is missing/zero.
+        var fallbackQuery = context.Locations.AsQueryable();
+        if (!string.IsNullOrWhiteSpace(neighborhood))
+        {
+            var n = neighborhood!;
+            fallbackQuery = fallbackQuery.Where(x => x.Neighborhood != null && x.Neighborhood.ToLower() == n);
+        }
+        else if (!string.IsNullOrWhiteSpace(neighborhoodNet))
+        {
+            var nn = neighborhoodNet!;
+            fallbackQuery = fallbackQuery.Where(x => x.NeighborhoodNet != null && x.NeighborhoodNet.ToLower() == nn);
+        }
+        else if (!string.IsNullOrWhiteSpace(code))
+        {
+            var c = code!;
+            fallbackQuery = fallbackQuery.Where(x => x.Code != null && x.Code.ToLower() == c);
+        }
+
+        if (!string.IsNullOrWhiteSpace(borough))
+        {
+            var b = borough!;
+            fallbackQuery = fallbackQuery.Where(x => x.Borough != null && x.Borough.ToLower() == b);
+        }
+
+        existing = await fallbackQuery.FirstOrDefaultAsync(ct);
+        if (existing != null)
+            return existing;
+
+        var location = new Location
+        {
+            Borough = dto.Borough?.Trim() ?? string.Empty,
+            Code = dto.Code?.Trim() ?? string.Empty,
+            NeighborhoodNet = dto.NeighborhoodNet?.Trim() ?? string.Empty,
+            Neighborhood = dto.Neighborhood?.Trim() ?? string.Empty,
+            ZipCode = dto.ZipCode
+        };
+
+        await context.Locations.AddAsync(location, ct);
+        return location;
     }
     
     public async Task<List<Location>> SearchLocationsAsync(string searchTerm, int limit, CancellationToken ct)
@@ -201,4 +277,7 @@ public sealed class LocationRepository(ApplicationDbContext context) : ILocation
 
         return query;
     }
+
+    private static string? Normalize(string? value)
+        => string.IsNullOrWhiteSpace(value) ? null : value.Trim().ToLower();
 }

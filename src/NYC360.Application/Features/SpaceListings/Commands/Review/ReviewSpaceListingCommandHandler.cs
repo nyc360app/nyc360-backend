@@ -10,6 +10,7 @@ namespace NYC360.Application.Features.SpaceListings.Commands.Review;
 
 public class ReviewSpaceListingCommandHandler(
     ISpaceListingRepository listingRepository,
+    ILocationRepository locationRepository,
     ISpaceIntegrationService spaceIntegrationService,
     IUnitOfWork unitOfWork)
     : IRequestHandler<ReviewSpaceListingCommand, StandardResponse>
@@ -46,6 +47,7 @@ public class ReviewSpaceListingCommandHandler(
 
         if (request.Decision == SpaceListingStatus.Approved)
         {
+            await SpaceListingLocationSync.EnsureLocationLinkedAsync(listing, locationRepository, ct);
             listing.OwnershipStatus = listing.IsClaimingOwnership ? SpaceListingOwnershipStatus.Approved : SpaceListingOwnershipStatus.None;
             if (listing.IsClaimingOwnership)
                 listing.ClaimedByUserId = listing.SubmitterUserId;

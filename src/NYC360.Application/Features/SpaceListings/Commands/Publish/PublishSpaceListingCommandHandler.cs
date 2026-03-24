@@ -9,6 +9,7 @@ namespace NYC360.Application.Features.SpaceListings.Commands.Publish;
 
 public class PublishSpaceListingCommandHandler(
     ISpaceListingRepository listingRepository,
+    ILocationRepository locationRepository,
     ISpaceIntegrationService spaceIntegrationService,
     IUnitOfWork unitOfWork)
     : IRequestHandler<PublishSpaceListingCommand, StandardResponse>
@@ -24,6 +25,8 @@ public class PublishSpaceListingCommandHandler(
 
         if (listing.Status is not (SpaceListingStatus.Approved or SpaceListingStatus.PublishedToSpace or SpaceListingStatus.Claimed))
             return StandardResponse.Failure(new ApiError("space.publish.invalid_status", "Listing is not ready to publish."));
+
+        await SpaceListingLocationSync.EnsureLocationLinkedAsync(listing, locationRepository, ct);
 
         var addressLine = SpaceListingNormalizer.BuildAddressLine(listing.Street, listing.BuildingNumber);
         var result = await spaceIntegrationService.CreateListingAsync(
