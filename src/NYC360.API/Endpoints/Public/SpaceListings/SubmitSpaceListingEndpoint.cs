@@ -5,11 +5,13 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using NYC360.API.Extensions;
 using NYC360.API.Models.SpaceListings;
-using NYC360.Application.Features.SpaceListings.Commands.Submit;
 using NYC360.Domain.Dtos.Location;
 using NYC360.Domain.Enums;
 using NYC360.Domain.Enums.SpaceListings;
 using NYC360.Domain.Wrappers;
+using SubmitSpaceListingCommand = NYC360.Application.Features.SpaceListings.Commands.Submit.SubmitSpaceListingCommand;
+using SubmitSpaceListingSocialLinkInput = NYC360.Application.Features.SpaceListings.Commands.Submit.SpaceListingSocialLinkInput;
+using SubmitSpaceListingHourInput = NYC360.Application.Features.SpaceListings.Commands.Submit.SpaceListingHourInput;
 
 namespace NYC360.API.Endpoints.Public.SpaceListings;
 
@@ -40,7 +42,7 @@ public class SubmitSpaceListingEndpoint(IMediator mediator, ILogger<SubmitSpaceL
 
         if (!TryParseEnum(req.Department, out Category department))
         {
-            await SendAsync(
+            await SendWithStatusAsync(
                 StandardResponse<int>.Failure(new ApiError("space.listing.department.invalid", "Department is required and must be a valid value.")),
                 StatusCodes.Status400BadRequest,
                 ct);
@@ -49,7 +51,7 @@ public class SubmitSpaceListingEndpoint(IMediator mediator, ILogger<SubmitSpaceL
 
         if (!TryParseEnum(req.EntityType, out SpaceListingEntityType entityType))
         {
-            await SendAsync(
+            await SendWithStatusAsync(
                 StandardResponse<int>.Failure(new ApiError("space.listing.entity_type.invalid", "EntityType is required and must be a valid value.")),
                 StatusCodes.Status400BadRequest,
                 ct);
@@ -58,7 +60,7 @@ public class SubmitSpaceListingEndpoint(IMediator mediator, ILogger<SubmitSpaceL
 
         if (string.IsNullOrWhiteSpace(req.Name))
         {
-            await SendAsync(
+            await SendWithStatusAsync(
                 StandardResponse<int>.Failure(new ApiError("space.listing.name.required", "Name is required.")),
                 StatusCodes.Status400BadRequest,
                 ct);
@@ -67,7 +69,7 @@ public class SubmitSpaceListingEndpoint(IMediator mediator, ILogger<SubmitSpaceL
 
         if (string.IsNullOrWhiteSpace(req.Description))
         {
-            await SendAsync(
+            await SendWithStatusAsync(
                 StandardResponse<int>.Failure(new ApiError("space.listing.description.required", "Description is required.")),
                 StatusCodes.Status400BadRequest,
                 ct);
@@ -86,8 +88,8 @@ public class SubmitSpaceListingEndpoint(IMediator mediator, ILogger<SubmitSpaceL
             var categories = req.Categories ?? ParseJsonList<Category>(req.CategoriesJson);
             var tags = req.Tags ?? ParseJsonList<string>(req.TagsJson);
             var organizationServices = req.OrganizationServices ?? ParseJsonList<Domain.Enums.Users.OrganizationServices>(req.OrganizationServicesJson);
-            var socialLinks = req.SocialLinks ?? ParseJsonList<SpaceListingSocialLinkInput>(req.SocialLinksJson);
-            var hours = req.Hours ?? ParseJsonList<SpaceListingHourInput>(req.HoursJson);
+            var socialLinks = req.SocialLinks ?? ParseJsonList<NYC360.API.Models.SpaceListings.SpaceListingSocialLinkInput>(req.SocialLinksJson);
+            var hours = req.Hours ?? ParseJsonList<NYC360.API.Models.SpaceListings.SpaceListingHourInput>(req.HoursJson);
 
             var command = new SubmitSpaceListingCommand(
                 userId.Value,
@@ -119,8 +121,8 @@ public class SubmitSpaceListingEndpoint(IMediator mediator, ILogger<SubmitSpaceL
                 organizationServices ?? [],
                 req.OrganizationIsTaxExempt,
                 req.OrganizationIsNysRegistered,
-                socialLinks?.Select(x => new Application.Features.SpaceListings.Commands.Submit.SpaceListingSocialLinkInput(x.Platform, x.Url)).ToList() ?? [],
-                hours?.Select(x => new Application.Features.SpaceListings.Commands.Submit.SpaceListingHourInput(x.DayOfWeek, x.OpenTime, x.CloseTime, x.IsClosed)).ToList() ?? [],
+                socialLinks?.Select(x => new SubmitSpaceListingSocialLinkInput(x.Platform, x.Url)).ToList() ?? [],
+                hours?.Select(x => new SubmitSpaceListingHourInput(x.DayOfWeek, x.OpenTime, x.CloseTime, x.IsClosed)).ToList() ?? [],
                 req.SaveAsDraft,
                 req.Images,
                 req.Documents,
@@ -131,7 +133,7 @@ public class SubmitSpaceListingEndpoint(IMediator mediator, ILogger<SubmitSpaceL
             var result = await mediator.Send(command, ct);
             if (!result.IsSuccess)
             {
-                await SendAsync(result, StatusCodes.Status400BadRequest, ct);
+                await SendWithStatusAsync(result, StatusCodes.Status400BadRequest, ct);
                 return;
             }
 
@@ -140,7 +142,7 @@ public class SubmitSpaceListingEndpoint(IMediator mediator, ILogger<SubmitSpaceL
         catch (JsonException ex)
         {
             logger.LogWarning(ex, "Invalid JSON payload for space listing submission.");
-            await SendAsync(
+            await SendWithStatusAsync(
                 StandardResponse<int>.Failure(new ApiError("space.listing.invalid_json", "One or more JSON form fields are invalid.")),
                 StatusCodes.Status400BadRequest,
                 ct);
@@ -148,7 +150,7 @@ public class SubmitSpaceListingEndpoint(IMediator mediator, ILogger<SubmitSpaceL
         catch (Exception ex)
         {
             logger.LogError(ex, "Unhandled error during space listing submission.");
-            await SendAsync(
+            await SendWithStatusAsync(
                 StandardResponse<int>.Failure(new ApiError("space.listing.submit_failed", "Unable to process listing submission.")),
                 StatusCodes.Status500InternalServerError,
                 ct);
@@ -186,5 +188,11 @@ public class SubmitSpaceListingEndpoint(IMediator mediator, ILogger<SubmitSpaceL
             return null;
 
         return JsonSerializer.Deserialize<List<T>>(json, JsonOptions);
+    }
+
+    private async Task SendWithStatusAsync(StandardResponse<int> response, int statusCode, CancellationToken ct)
+    {
+        HttpContext.Response.StatusCode = statusCode;
+        await HttpContext.Response.WriteAsJsonAsync(response, cancellationToken: ct);
     }
 }
