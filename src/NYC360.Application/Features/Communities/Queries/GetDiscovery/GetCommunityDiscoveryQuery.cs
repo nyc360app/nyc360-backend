@@ -6,7 +6,7 @@ using MediatR;
 namespace NYC360.Application.Features.Communities.Queries.GetDiscovery;
 
 public record GetCommunityDiscoveryQuery(
-    int UserId,
+    int? UserId,
     string? SearchTerm,
     CommunityType? Type,
     int? LocationId,

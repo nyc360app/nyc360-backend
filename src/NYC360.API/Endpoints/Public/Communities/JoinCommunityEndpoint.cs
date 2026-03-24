@@ -19,9 +19,7 @@ public class JoinCommunityEndpoint(IMediator mediator) : Endpoint<JoinCommunityR
         var userId = User.GetId();
         if (userId == null)
         {
-            await Send.OkAsync(StandardResponse.Failure(
-                new ApiError("auth.invalidEmail", "Email not found")
-            ), ct);
+            await Send.UnauthorizedAsync(ct);
             return;
         }
         

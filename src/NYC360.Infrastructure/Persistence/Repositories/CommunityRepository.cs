@@ -37,12 +37,15 @@ public sealed class CommunityRepository(ApplicationDbContext context) : ICommuni
             .ToListAsync(ct);
     }
 
-    public async Task<(List<Community>, int)> SearchCommunitiesAsync(int userId, string? searchTerm, CommunityType? type, int? locationId, int page, int pageSize, CancellationToken ct)
+    public async Task<(List<Community>, int)> SearchCommunitiesAsync(int? userId, string? searchTerm, CommunityType? type, int? locationId, int page, int pageSize, CancellationToken ct)
     {
         var query = context.Communities
             .AsNoTracking()
-            .Where(c => c.IsActive && !c.IsPrivate && c.Members.All(m => m.UserId != userId))
+            .Where(c => c.IsActive && !c.IsPrivate)
             .AsQueryable();
+
+        if (userId.HasValue)
+            query = query.Where(c => c.Members.All(m => m.UserId != userId.Value));
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
             query = query.Where(c => c.Name.Contains(searchTerm) || c.Description.Contains(searchTerm));
@@ -106,6 +109,18 @@ public sealed class CommunityRepository(ApplicationDbContext context) : ICommuni
     public async Task<bool> IsNameAvailableAsync(string name, CancellationToken ct)
     {
         return await context.Communities.AnyAsync(c => c.Name == name, ct);
+    }
+
+    public async Task<bool> ExistsByNameTypeAndLocationAsync(string name, CommunityType? type, int? locationId, CancellationToken ct)
+    {
+        var normalizedName = name.Trim().ToLower();
+
+        return await context.Communities
+            .AnyAsync(c =>
+                c.Name.ToLower() == normalizedName &&
+                c.Type == type &&
+                c.LocationId == locationId,
+                ct);
     }
 
     public async Task<bool> ExistsAsync(int id, CancellationToken ct)

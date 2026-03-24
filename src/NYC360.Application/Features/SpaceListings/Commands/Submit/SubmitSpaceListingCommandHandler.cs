@@ -1,7 +1,9 @@
 using NYC360.Application.Contracts.Persistence;
 using NYC360.Application.Contracts.Storage;
 using NYC360.Application.Features.SpaceListings.Common;
+using NYC360.Domain.Constants;
 using NYC360.Domain.Entities.SpaceListings;
+using NYC360.Domain.Enums;
 using NYC360.Domain.Enums.SpaceListings;
 using NYC360.Domain.Wrappers;
 using MediatR;
@@ -10,6 +12,7 @@ namespace NYC360.Application.Features.SpaceListings.Commands.Submit;
 
 public class SubmitSpaceListingCommandHandler(
     ISpaceListingRepository listingRepository,
+    ITagRepository tagRepository,
     ILocationRepository locationRepository,
     IUnitOfWork unitOfWork,
     ILocalStorageService storageService)
@@ -19,6 +22,21 @@ public class SubmitSpaceListingCommandHandler(
     {
         if (request.Address == null)
             return StandardResponse<int>.Failure(new ApiError("space.address.required", "Address details are required."));
+
+        if (request.Department == Category.Community && request.EntityType == SpaceListingEntityType.Organization)
+        {
+            var hasCommunityOrgListingTag = await tagRepository.UserHasTagAsync(
+                request.UserId,
+                CommunityVerificationTags.ListCommunityOrganizationInSpaceName,
+                ct);
+            if (!hasCommunityOrgListingTag)
+            {
+                return StandardResponse<int>.Failure(
+                    new ApiError(
+                        "space.listing.community_organization.requires_tag",
+                        "Community organization listing requires D01.3 approval."));
+            }
+        }
 
         var normalizedName = SpaceListingNormalizer.NormalizeName(request.Name);
         var normalizedWebsite = SpaceListingNormalizer.NormalizeWebsite(request.Website);

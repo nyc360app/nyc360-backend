@@ -1,6 +1,7 @@
 using NYC360.Application.Features.Communities.Queries.GetMembers;
 using NYC360.Domain.Dtos.Communities;
 using NYC360.API.Models.Communities;
+using NYC360.API.Extensions;
 using NYC360.Domain.Wrappers;
 using FastEndpoints;
 using MediatR;
@@ -17,7 +18,7 @@ public class GetCommunityMembersEndpoint(IMediator mediator)
 
     public override async Task HandleAsync(GetMembersRequest req, CancellationToken ct)
     {
-        var query = new GetCommunityMembersQuery(req.CommunityId, req.Page, req.PageSize);
+        var query = new GetCommunityMembersQuery(User.GetId(), req.CommunityId, req.Page, req.PageSize);
         var result = await mediator.Send(query, ct);
         await Send.OkAsync(result, ct);
     }

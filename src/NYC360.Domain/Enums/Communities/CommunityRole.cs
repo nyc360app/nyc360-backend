@@ -4,5 +4,6 @@ public enum CommunityRole : byte
 {
     Leader = 1,
     Moderator,
-    Member
+    Member,
+    Volunteer
 }

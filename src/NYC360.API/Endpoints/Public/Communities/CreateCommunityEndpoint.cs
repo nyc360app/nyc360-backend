@@ -12,7 +12,7 @@ public class CreateCommunityEndpoint(IMediator mediator) : Endpoint<CreateCommun
     public override void Configure()
     {
         Post("/communities/create");
-        //Permissions(Domain.Constants.Permissions.Communities.Create);
+        Roles("Resident", "Organization", "Business");
         AllowFileUploads();
     }
     
@@ -21,9 +21,7 @@ public class CreateCommunityEndpoint(IMediator mediator) : Endpoint<CreateCommun
         var userId = User.GetId();
         if (userId == null)
         {
-            await Send.OkAsync(StandardResponse<string>.Failure(
-                new ApiError("auth.invalidEmail", "Email not found")
-            ), ct);
+            await Send.UnauthorizedAsync(ct);
             return;
         }
         var command = new CreateCommunityCommand(

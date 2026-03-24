@@ -28,17 +28,19 @@ public class AssignLeaderCommandHandler(
                 new ApiError("community.userNotMember", "User must be a community member to be assigned as leader."));
         }
 
-        // 3. Check if user is already a leader
-        if (member.Role == CommunityRole.Leader)
+        // 3. Keep exactly one leader by demoting existing leaders first.
+        var existingLeaders = await communityRepository.GetLeadersAsync(request.CommunityId, ct);
+        foreach (var leader in existingLeaders)
         {
-            return StandardResponse<string>.Failure(
-                new ApiError("community.alreadyLeader", "User is already a leader of this community."));
+            if (leader.UserId == request.UserId)
+                continue;
+            leader.Role = CommunityRole.Member;
         }
 
-        // 4. Promote to leader
+        // 4. Promote target to leader (or keep as leader if already assigned).
         member.Role = CommunityRole.Leader;
         await unitOfWork.SaveChangesAsync(ct);
 
-        return StandardResponse<string>.Success("User successfully assigned as community leader.");
+        return StandardResponse<string>.Success("Community leader assigned successfully.");
     }
 }

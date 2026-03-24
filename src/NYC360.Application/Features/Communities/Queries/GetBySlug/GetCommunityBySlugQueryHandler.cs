@@ -20,11 +20,14 @@ public class GetCommunityBySlugQueryHandler(
                 new ApiError("community.notfound", "Community not found."));
         }
 
-        var member = await communityRepository.GetMemberAsync(community.Id, request.UserId, ct);
+        var member = request.UserId.HasValue
+            ? await communityRepository.GetMemberAsync(community.Id, request.UserId.Value, ct)
+            : null;
 
         PagedResponse<PostDto>? posts = null;
 
-        if (member != null)
+        var canViewPosts = !community.IsPrivate || member != null;
+        if (canViewPosts)
         {
             var (items, total) =
                 await postRepository.GetAllByCommunityIdPaginatedAsync(

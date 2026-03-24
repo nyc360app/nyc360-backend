@@ -1,6 +1,7 @@
 using NYC360.Application.Contracts.Persistence;
 using NYC360.Application.Contracts.Storage;
 using NYC360.Domain.Entities.Posts;
+using NYC360.Domain.Enums.Communities;
 using NYC360.Domain.Enums.Posts;
 using NYC360.Domain.Entities;
 using NYC360.Domain.Wrappers;
@@ -24,11 +25,28 @@ public class CreateCommunityPostCommandHandler(
         if (community == null)
             return StandardResponse<int>.Failure(new ApiError("community.notfound", "Community not found."));
 
-        if (!community.AnyoneCanPost)
+        var member = await communityRepository.GetMemberAsync(request.CommunityId, request.UserId, ct);
+        if (member == null)
         {
-            var isMember = await communityRepository.IsMemberAsync(request.CommunityId, request.UserId, ct);
-            if (!isMember)
-                return StandardResponse<int>.Failure(new ApiError("community.forbidden", "You must be a member of this community to post."));
+            return StandardResponse<int>.Failure(
+                new ApiError("community.forbidden", "You must be a member of this community to post."));
+        }
+
+        if (!community.AnyoneCanPost &&
+            member.Role is not (CommunityRole.Leader or CommunityRole.Volunteer))
+        {
+            return StandardResponse<int>.Failure(
+                new ApiError(
+                    "community.post.requires_contributor",
+                    "Only a community leader or volunteer can publish posts in this community."));
+        }
+
+        if (member.Role == CommunityRole.Moderator)
+        {
+            return StandardResponse<int>.Failure(
+                new ApiError(
+                    "community.post.moderator_restricted",
+                    "Moderators can moderate content but cannot publish community posts."));
         }
 
         // 2. Handle Attachments via File Service

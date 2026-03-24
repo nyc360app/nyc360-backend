@@ -13,18 +13,14 @@ public class GetCommunityDiscoveryEndpoint(IMediator mediator) : Endpoint<GetDis
     public override void Configure()
     {
         Get("/communities/discovery");
+        AllowAnonymous();
     }
 
     public override async Task HandleAsync(GetDiscoveryRequest req, CancellationToken ct)
     {
         var userId = User.GetId();
-        if (userId == null)
-        {
-            await Send.UnauthorizedAsync(ct);
-            return;
-        }
         var query = new GetCommunityDiscoveryQuery(
-            userId.Value,
+            userId,
             req.Search, 
             req.Type, 
             req.LocationId, 

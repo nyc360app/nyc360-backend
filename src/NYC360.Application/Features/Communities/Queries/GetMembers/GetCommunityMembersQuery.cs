@@ -5,6 +5,7 @@ using MediatR;
 namespace NYC360.Application.Features.Communities.Queries.GetMembers;
 
 public record GetCommunityMembersQuery(
+    int? UserId,
     int CommunityId,
     int Page,
     int PageSize

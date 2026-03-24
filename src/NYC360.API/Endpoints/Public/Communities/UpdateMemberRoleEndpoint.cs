@@ -16,8 +16,15 @@ public class UpdateMemberRoleEndpoint(IMediator mediator) : Endpoint<UpdateMembe
 
     public override async Task HandleAsync(UpdateMemberRoleRequest req, CancellationToken ct)
     {
+        var userId = User.GetId();
+        if (userId == null)
+        {
+            await Send.UnauthorizedAsync(ct);
+            return;
+        }
+
         var result = await mediator.Send(new UpdateMemberRoleCommand(
-            User.GetId()!.Value,
+            userId.Value,
             req.CommunityId,
             req.TargetUserId,
             req.NewRole

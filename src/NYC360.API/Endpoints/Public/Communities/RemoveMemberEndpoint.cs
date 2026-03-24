@@ -16,8 +16,15 @@ public class RemoveMemberEndpoint(IMediator mediator) : Endpoint<RemoveMemberReq
 
     public override async Task HandleAsync(RemoveMemberRequest req, CancellationToken ct)
     {
+        var userId = User.GetId();
+        if (userId == null)
+        {
+            await Send.UnauthorizedAsync(ct);
+            return;
+        }
+
         var result = await mediator.Send(new RemoveMemberCommand(
-            User.GetId()!.Value, 
+            userId.Value, 
             req.CommunityId, 
             req.TargetUserId
         ), ct);

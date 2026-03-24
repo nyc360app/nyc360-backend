@@ -16,8 +16,15 @@ public class RejectJoinRequestEndpoint(IMediator mediator) : Endpoint<ProcessJoi
 
     public override async Task HandleAsync(ProcessJoinRequestRequest req, CancellationToken ct)
     {
+        var userId = User.GetId();
+        if (userId == null)
+        {
+            await Send.UnauthorizedAsync(ct);
+            return;
+        }
+
         var result = await mediator.Send(new ProcessJoinRequestCommand(
-            User.GetId()!.Value, req.CommunityId, req.TargetUserId, false), ct);
+            userId.Value, req.CommunityId, req.TargetUserId, false), ct);
         await Send.OkAsync(result, ct);
     }
 }

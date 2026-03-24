@@ -10,13 +10,14 @@ public interface ICommunityRepository
     Task<Community?> GetByIdAsync(int id, CancellationToken ct);
     Task<Community?> GetBySlugAsync(string slug, CancellationToken ct);
     Task<List<Community>> GetAllPaginatedAsync(int page, int itemsPerPage, CancellationToken ct);
-    Task<(List<Community>, int)> SearchCommunitiesAsync(int userId, string? searchTerm, CommunityType? type,
+    Task<(List<Community>, int)> SearchCommunitiesAsync(int? userId, string? searchTerm, CommunityType? type,
         int? locationId, int page, int pageSize, CancellationToken ct);
 
     Task<List<CommunityDiscoveryDto>> SearchCommunitiesAsync(string term, int limit, CancellationToken ct);
     Task<(List<Community>, int)> SearchUserCommunitiesAsync(int userId, string? searchTerm, CommunityType? type,
         int? locationId, int page, int pageSize, CancellationToken ct);
     Task<bool> IsNameAvailableAsync(string name, CancellationToken ct);
+    Task<bool> ExistsByNameTypeAndLocationAsync(string name, CommunityType? type, int? locationId, CancellationToken ct);
     Task<bool> ExistsAsync(int id, CancellationToken ct);
     Task<bool> SlugExistsAsync(string slug, CancellationToken ct);
     Task<CommunityMember?> GetMemberAsync(int communityId, int userId, CancellationToken ct);
