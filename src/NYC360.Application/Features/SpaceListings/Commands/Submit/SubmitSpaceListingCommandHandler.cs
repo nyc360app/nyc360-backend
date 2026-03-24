@@ -17,6 +17,9 @@ public class SubmitSpaceListingCommandHandler(
 {
     public async Task<StandardResponse<int>> Handle(SubmitSpaceListingCommand request, CancellationToken ct)
     {
+        if (request.Address == null)
+            return StandardResponse<int>.Failure(new ApiError("space.address.required", "Address details are required."));
+
         var normalizedName = SpaceListingNormalizer.NormalizeName(request.Name);
         var normalizedWebsite = SpaceListingNormalizer.NormalizeWebsite(request.Website);
         var normalizedEmail = SpaceListingNormalizer.NormalizeEmail(request.PublicEmail);
