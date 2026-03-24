@@ -48,6 +48,16 @@ public class PublishSpaceListingCommandHandler(
 
         listing.LastPublishAttemptAt = DateTime.UtcNow;
 
+        if (result.IsPublishSkipped)
+        {
+            listing.LastPublishError = null;
+            listing.Status = listing.IsClaimingOwnership ? SpaceListingStatus.Claimed : SpaceListingStatus.PublishedToSpace;
+            listing.Touch();
+            listingRepository.Update(listing);
+            await unitOfWork.SaveChangesAsync(ct);
+            return StandardResponse.Success();
+        }
+
         if (!result.Success || string.IsNullOrWhiteSpace(result.SpaceItemId))
         {
             listing.LastPublishError = result.ErrorMessage ?? "Failed to publish to Space.";

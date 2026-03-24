@@ -28,5 +28,6 @@ public record SpaceIntegrationResult(
     string? SpaceItemId,
     string? SpaceEntityType,
     string? SpaceSlug,
-    string? ErrorMessage
+    string? ErrorMessage,
+    bool IsPublishSkipped = false
 );

@@ -13,7 +13,7 @@ public class SpaceIntegrationService(HttpClient httpClient, IConfiguration confi
         var settings = configuration.GetSection("Space").Get<SpaceSettings>() ?? new SpaceSettings();
         if (!settings.Enabled || string.IsNullOrWhiteSpace(settings.BaseUrl))
         {
-            return new SpaceIntegrationResult(false, null, null, null, "Space integration is disabled.");
+            return new SpaceIntegrationResult(true, null, null, null, null, true);
         }
 
         var baseUri = settings.BaseUrl.TrimEnd('/');
