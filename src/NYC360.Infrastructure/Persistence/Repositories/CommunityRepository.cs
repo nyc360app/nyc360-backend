@@ -357,6 +357,46 @@ public sealed class CommunityRepository(ApplicationDbContext context) : ICommuni
             .AnyAsync(x => x.UserId == userId && x.Status == CommunityLeaderApplicationStatus.Pending, ct);
     }
 
+    public async Task<(List<CommunityLeaderApplication>, int)> GetLeaderApplicationsPaginatedAsync(
+        CommunityLeaderApplicationStatus? status,
+        int page,
+        int pageSize,
+        CancellationToken ct)
+    {
+        var query = context.CommunityLeaderApplications
+            .AsNoTracking()
+            .Include(x => x.User)
+                .ThenInclude(x => x!.User)
+            .AsQueryable();
+
+        if (status.HasValue)
+        {
+            query = query.Where(x => x.Status == status.Value);
+        }
+
+        var total = await query.CountAsync(ct);
+        var items = await query
+            .OrderByDescending(x => x.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(ct);
+
+        return (items, total);
+    }
+
+    public async Task<CommunityLeaderApplication?> GetLeaderApplicationByIdAsync(int id, CancellationToken ct)
+    {
+        return await context.CommunityLeaderApplications
+            .Include(x => x.User)
+                .ThenInclude(x => x!.User)
+            .FirstOrDefaultAsync(x => x.Id == id, ct);
+    }
+
+    public void UpdateLeaderApplication(CommunityLeaderApplication application)
+    {
+        context.CommunityLeaderApplications.Update(application);
+    }
+
     public void UpdateDisbandRequest(CommunityDisbandRequest request)
     {
         context.CommunityDisbandRequests.Update(request);
