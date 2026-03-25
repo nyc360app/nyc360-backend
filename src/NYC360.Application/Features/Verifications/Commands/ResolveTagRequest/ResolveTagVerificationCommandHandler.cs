@@ -2,6 +2,8 @@ using NYC360.Application.Contracts.Persistence;
 using NYC360.Domain.Entities.Tags;
 using NYC360.Domain.Wrappers;
 using NYC360.Domain.Enums;
+using NYC360.Domain.Enums.Tags;
+using NYC360.Domain.Entities.User;
 using MediatR;
 
 namespace NYC360.Application.Features.Verifications.Commands.ResolveTagRequest;
@@ -9,6 +11,7 @@ namespace NYC360.Application.Features.Verifications.Commands.ResolveTagRequest;
 public class ResolveTagVerificationHandler(
     IVerificationRepository verificationRepository,
     ITagRepository tagRepository,
+    IUserRepository userRepository,
     IUnitOfWork unitOfWork)
     : IRequestHandler<ResolveTagVerificationCommand, StandardResponse>
 {
@@ -40,6 +43,30 @@ public class ResolveTagVerificationHandler(
                 };
 
                 await tagRepository.AddUserTagAsync(userTag, ct);
+            }
+
+            // Identity approvals must unlock frontend Gate 1 checks that rely on UserInfo.isVerified.
+            var approvedTag = await tagRepository.GetByIdAsync(vRequest.TargetTagId);
+            if (approvedTag?.Type == TagType.Identity)
+            {
+                var profile = await userRepository.GetByIdWithStatsAsync(vRequest.UserId, ct);
+                if (profile == null)
+                {
+                    return StandardResponse.Failure(new ApiError("user.not_found", "User profile not found."));
+                }
+
+                if (profile.Stats == null)
+                {
+                    profile.Stats = new UserStats
+                    {
+                        UserId = profile.UserId,
+                        IsVerified = true
+                    };
+                }
+                else
+                {
+                    profile.Stats.IsVerified = true;
+                }
             }
         }
         else
