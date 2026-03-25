@@ -1,20 +1,26 @@
 using FastEndpoints;
+using Microsoft.AspNetCore.Identity;
 using MediatR;
 using NYC360.API.Extensions;
 using NYC360.API.Models.Communities;
+using NYC360.Application.Contracts.Persistence;
 using NYC360.Application.Features.Communities.Commands.SubmitLeaderApplication;
+using NYC360.Domain.Entities.User;
 using NYC360.Domain.Dtos.Communities;
 using NYC360.Domain.Wrappers;
 
 namespace NYC360.API.Endpoints.Public.Communities;
 
-public class SubmitCommunityLeaderApplicationEndpoint(IMediator mediator)
+public class SubmitCommunityLeaderApplicationEndpoint(
+    IMediator mediator,
+    IUserRepository userRepository,
+    UserManager<ApplicationUser> userManager)
     : Endpoint<SubmitCommunityLeaderApplicationRequest, StandardResponse<CommunityLeaderApplicationSubmissionDto>>
 {
     public override void Configure()
     {
         Post("/communities/leader-applications/submit");
-        Roles("Resident", "Organization", "Business");
+        Roles("Resident", "Organization", "Business", "Admin", "SuperAdmin");
         AllowFileUploads();
         Summary(s =>
         {
@@ -43,6 +49,13 @@ public class SubmitCommunityLeaderApplicationEndpoint(IMediator mediator)
             return;
         }
 
+        if (!await HasGate1EligibilityAsync(userId.Value, ct))
+        {
+            await Send.OkAsync(StandardResponse<CommunityLeaderApplicationSubmissionDto>.Failure(
+                new ApiError("community.gate1.notEligible", "Only verified Resident, Organization, or Business users can apply. Staff accounts are allowed.")), ct);
+            return;
+        }
+
         var command = new SubmitCommunityLeaderApplicationCommand(
             userId.Value,
             req.fullName,
@@ -60,5 +73,22 @@ public class SubmitCommunityLeaderApplicationEndpoint(IMediator mediator)
 
         var result = await mediator.Send(command, ct);
         await Send.OkAsync(result, ct);
+    }
+
+    private async Task<bool> HasGate1EligibilityAsync(int userId, CancellationToken ct)
+    {
+        var profile = await userRepository.GetProfileByUserIdAsync(userId, ct);
+        if (profile?.User == null)
+            return false;
+
+        var roles = await userManager.GetRolesAsync(profile.User);
+        var isStaff = roles.Contains("SuperAdmin") || roles.Contains("Admin");
+        if (isStaff)
+            return true;
+
+        var isAllowedRole = roles.Contains("Resident") || roles.Contains("Organization") || roles.Contains("Business");
+        var isVerified = profile.Stats?.IsVerified ?? false;
+
+        return isAllowedRole && isVerified;
     }
 }

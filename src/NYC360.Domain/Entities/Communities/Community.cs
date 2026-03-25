@@ -15,10 +15,12 @@ public class Community
     public string Name { get; set; } = string.Empty;
     public string Slug { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+    public string? Rules { get; set; }
     public CommunityType? Type { get; set; }
     public string? AvatarUrl { get; set; } = string.Empty;
     public string? CoverUrl { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;
+    public bool IsFeatured { get; set; } = false;
     public bool IsPrivate { get; set; } = false;
     public bool RequiresApproval { get; set; } = false;
     public bool AnyoneCanPost { get; set; } = false;

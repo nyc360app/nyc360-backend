@@ -11,9 +11,11 @@ public record UpdateCommunityInfoCommand(
     int CommunityId,
     string? Name,
     string? Description,
+    string? Rules,
     CommunityType? Type,
     int? LocationId,
     bool? IsPrivate,
+    bool? AnyoneCanPost,
     bool? RequiresApproval,
     IFormFile? AvatarImage,
     IFormFile? CoverImage

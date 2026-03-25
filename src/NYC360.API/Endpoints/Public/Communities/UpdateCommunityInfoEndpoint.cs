@@ -32,9 +32,11 @@ public class UpdateCommunityInfoEndpoint(IMediator mediator) : Endpoint<UpdateCo
             req.CommunityId,
             req.Name,
             req.Description,
+            req.Rules,
             req.Type,
             req.LocationId,
             req.IsPrivate,
+            req.AnyoneCanPost,
             req.RequiresApproval,
             req.AvatarImage,
             req.CoverImage

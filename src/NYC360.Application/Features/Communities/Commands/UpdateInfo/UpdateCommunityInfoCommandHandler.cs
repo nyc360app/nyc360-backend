@@ -67,6 +67,9 @@ public class UpdateCommunityInfoCommandHandler(
         if (!string.IsNullOrWhiteSpace(request.Description))
             community.Description = request.Description;
 
+        if (request.Rules != null)
+            community.Rules = string.IsNullOrWhiteSpace(request.Rules) ? null : request.Rules.Trim();
+
         if (request.Type.HasValue)
             community.Type = request.Type.Value;
 
@@ -75,6 +78,9 @@ public class UpdateCommunityInfoCommandHandler(
 
         if (request.IsPrivate.HasValue)
             community.IsPrivate = request.IsPrivate.Value;
+
+        if (request.AnyoneCanPost.HasValue)
+            community.AnyoneCanPost = request.AnyoneCanPost.Value;
 
         if (request.RequiresApproval.HasValue)
             community.RequiresApproval = request.RequiresApproval.Value;

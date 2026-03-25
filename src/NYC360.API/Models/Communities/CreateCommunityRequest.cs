@@ -1,15 +1,17 @@
 using NYC360.Domain.Enums.Communities;
-using NYC360.Domain.Dtos.Location;
 
 namespace NYC360.API.Models.Communities;
 
 public record CreateCommunityRequest(
     string Name,
     string Description,
+    string? Rules,
     string? Slug,
     CommunityType Type,
     int? LocationId,
     bool IsPrivate,
+    bool? RequiresApproval,
+    bool? AnyoneCanPost,
     IFormFile? AvatarImage,
     IFormFile? CoverImage
 );

@@ -1,5 +1,6 @@
 using NYC360.Application.Contracts.Persistence;
 using NYC360.Application.Contracts.Services;
+using NYC360.Application.Contracts.Storage;
 using NYC360.Domain.Entities;
 using NYC360.Domain.Wrappers;
 using NYC360.Domain.Enums;
@@ -10,7 +11,8 @@ namespace NYC360.Application.Features.RssSources.Commands.ConnectRequest;
 public class RssFeedConnectionRequestCreateCommandHandler(
     IRssFeedConnectionRequestRepository requestRepo,
     IRssSourceRepository rssSourceRepo,
-    INewsAuthorizationService newsAuthorizationService)
+    INewsAuthorizationService newsAuthorizationService,
+    ILocalStorageService localStorageService)
     : IRequestHandler<RssFeedConnectionRequestCreateCommand, StandardResponse>
 {
     public async Task<StandardResponse> Handle(RssFeedConnectionRequestCreateCommand request, CancellationToken cancellationToken)
@@ -19,6 +21,13 @@ public class RssFeedConnectionRequestCreateCommandHandler(
         var normalizedName = request.Name.Trim();
         var normalizedDescription = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim();
         var normalizedImageUrl = string.IsNullOrWhiteSpace(request.ImageUrl) ? null : request.ImageUrl.Trim();
+        var normalizedLanguage = string.IsNullOrWhiteSpace(request.Language) ? null : request.Language.Trim();
+        var normalizedSourceWebsite = string.IsNullOrWhiteSpace(request.SourceWebsite) ? null : request.SourceWebsite.Trim();
+        var normalizedSourceCredibility = string.IsNullOrWhiteSpace(request.SourceCredibility) ? null : request.SourceCredibility.Trim();
+        var normalizedDivisionTag = string.IsNullOrWhiteSpace(request.DivisionTag) ? null : request.DivisionTag.Trim();
+        var logoImageUrl = request.LogoImage is not null
+            ? await localStorageService.SaveFileAsync(request.LogoImage, "rss-connect-logos", cancellationToken)
+            : null;
 
         if (request.Category == Category.News)
         {
@@ -42,6 +51,12 @@ public class RssFeedConnectionRequestCreateCommandHandler(
             Name = normalizedName,
             Description = normalizedDescription,
             ImageUrl = normalizedImageUrl,
+            LogoImageUrl = logoImageUrl,
+            Language = normalizedLanguage,
+            SourceWebsite = normalizedSourceWebsite,
+            SourceCredibility = normalizedSourceCredibility,
+            AgreementAccepted = request.AgreementAccepted,
+            DivisionTag = normalizedDivisionTag,
             RequesterId = request.RequesterId,
             CreatedAt = DateTime.UtcNow,
             Status = Domain.Enums.RssConnectionStatus.Pending

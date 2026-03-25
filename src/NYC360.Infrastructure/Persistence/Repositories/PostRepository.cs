@@ -150,6 +150,31 @@ public sealed class PostRepository(ApplicationDbContext db) : IPostRepository
         return (list, totalCount);
     }
 
+    public async Task<CommunityContentSummaryDto> GetCommunityContentSummaryAsync(int communityId, CancellationToken ct)
+    {
+        var totalPosts = await db.Posts
+            .AsNoTracking()
+            .Where(p => p.CommunityId == communityId && p.IsApproved)
+            .CountAsync(ct);
+
+        var eventPosts = await db.Posts
+            .AsNoTracking()
+            .Where(p => p.CommunityId == communityId && p.IsApproved && p.PostType == PostType.Event)
+            .CountAsync(ct);
+
+        var initiativePosts = await db.Posts
+            .AsNoTracking()
+            .Where(p => p.CommunityId == communityId && p.IsApproved && p.PostType == PostType.Initiative)
+            .CountAsync(ct);
+
+        var newsPosts = await db.Posts
+            .AsNoTracking()
+            .Where(p => p.CommunityId == communityId && p.IsApproved && p.PostType == PostType.News)
+            .CountAsync(ct);
+
+        return new CommunityContentSummaryDto(totalPosts, eventPosts, initiativePosts, newsPosts);
+    }
+
     public async Task<(List<PostDto>, int)> GetTrendingPaginatedAsync(List<Category> userInterests, int page, int pageSize, int? userId, CancellationToken ct)
     {
         // Ensure we have interests; if not, return an empty list or handle as a general trending list

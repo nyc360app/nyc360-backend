@@ -20,6 +20,7 @@ public interface IPostRepository
     Task<PostDetailsDto?> GetPostWithDetailsDtoByIdAsync(int id, int? userId, bool includeUnapproved, CancellationToken ct);
     Task<(List<PostDto>, int)> GetAllPaginatedAsync(int page, int pageSize, int? userId, Category? category, string? search, PostType? postType, PostSource? sourceType, int? authorId, bool includeUnapproved, CancellationToken ct);
     Task<(List<PostDto>, int)> GetAllByCommunityIdPaginatedAsync(int? UserId, int communityId, int page, int pageSize, CancellationToken ct);
+    Task<CommunityContentSummaryDto> GetCommunityContentSummaryAsync(int communityId, CancellationToken ct);
     Task<(List<PostDto>, int)> GetTrendingPaginatedAsync(List<Category> userInterests, int page, int pageSize, int? userId, CancellationToken ct);
     Task<(List<PostDto>, int)> GetFeedByCommunityIdsAsync(int? userId, List<int> communityIds, int page, int pageSize, CancellationToken ct);
     Task<List<PostDto>> GetFeaturedPostsAsync(int? userId, int count, CancellationToken ct);

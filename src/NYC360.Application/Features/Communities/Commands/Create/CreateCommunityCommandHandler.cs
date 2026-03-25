@@ -80,9 +80,12 @@ public class CreateCommunityCommandHandler(
             Name = request.Name,
             Slug = slug,
             Description = request.Description,
+            Rules = string.IsNullOrWhiteSpace(request.Rules) ? null : request.Rules.Trim(),
             LocationId = request.LocationId,
             Type = request.Type,
             IsPrivate = request.IsPrivate,
+            RequiresApproval = request.RequiresApproval ?? false,
+            AnyoneCanPost = request.AnyoneCanPost ?? false,
             Members = new List<CommunityMember>()
         };
 

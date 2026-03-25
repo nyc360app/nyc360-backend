@@ -13,6 +13,7 @@ public class CreateRssConnectionRequestEndpoint(IMediator mediator) : Endpoint<R
     public override void Configure()
     {
         Post("/rss/connect");
+        AllowFileUploads();
     }
     
     public override async Task HandleAsync(RssFeedConnectionRequestRequest request, CancellationToken ct)
@@ -30,6 +31,12 @@ public class CreateRssConnectionRequestEndpoint(IMediator mediator) : Endpoint<R
             request.Name, 
             request.Description, 
             request.ImageUrl,
+            request.Language,
+            request.SourceWebsite,
+            request.SourceCredibility,
+            request.AgreementAccepted,
+            request.DivisionTag,
+            request.LogoImage,
             userId.Value);
             
         var result = await mediator.Send(command, ct);

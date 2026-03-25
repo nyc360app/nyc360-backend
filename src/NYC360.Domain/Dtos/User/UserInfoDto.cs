@@ -8,6 +8,7 @@ namespace NYC360.Domain.Dtos.User;
 
 public record UserInfoDto(
     UserType Type,
+    List<string> Roles,
     string FirstName,
     string? LastName,
     string? Headline,
@@ -33,8 +34,9 @@ public static class UserInfoDtoExtensions
 {
     extension(UserInfoDto)
     {
-        public static UserInfoDto Map(UserProfile user) => new(
+        public static UserInfoDto Map(UserProfile user, List<string>? roles = null) => new(
             user.User!.Type,
+            roles ?? new(),
             user.FirstName,
             user.LastName,
             user.Headline,

@@ -14,6 +14,7 @@ public class CreateNewsRssConnectionRequestEndpoint(IMediator mediator)
     public override void Configure()
     {
         Post("/news/rss/connect");
+        AllowFileUploads();
     }
 
     public override async Task HandleAsync(NewsRssConnectionRequest req, CancellationToken ct)
@@ -32,6 +33,12 @@ public class CreateNewsRssConnectionRequestEndpoint(IMediator mediator)
                 req.Name,
                 req.Description,
                 req.ImageUrl,
+                req.Language,
+                req.SourceWebsite,
+                req.SourceCredibility,
+                req.AgreementAccepted,
+                req.DivisionTag,
+                req.LogoImage,
                 userId.Value),
             ct);
 

@@ -40,7 +40,7 @@ public class RssFeedConnectionRequestUpdateCommandHandler(
                 RssUrl = entity.Url,
                 Category = entity.Category,
                 Description = entity.Description,
-                ImageUrl = entity.ImageUrl,
+                ImageUrl = entity.LogoImageUrl ?? entity.ImageUrl,
                 IsActive = true,
                 LastChecked = DateTime.UtcNow
             };

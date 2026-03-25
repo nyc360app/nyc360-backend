@@ -10,10 +10,13 @@ public record CreateCommunityCommand(
     int UserId,
     string Name,
     string Description,
+    string? Rules,
     string? Slug,
     CommunityType Type,
     int? LocationId,
     bool IsPrivate,
+    bool? RequiresApproval,
+    bool? AnyoneCanPost,
     IFormFile? AvatarImage,
     IFormFile? CoverImage
 ) : IRequest<StandardResponse<string>>;

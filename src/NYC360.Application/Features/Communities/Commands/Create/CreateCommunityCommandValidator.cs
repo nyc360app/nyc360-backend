@@ -17,6 +17,10 @@ public class CreateCommunityCommandValidator : AbstractValidator<CreateCommunity
             .MinimumLength(10)
             .MaximumLength(1000);
 
+        RuleFor(x => x.Rules)
+            .MaximumLength(4000)
+            .When(x => !string.IsNullOrWhiteSpace(x.Rules));
+
         RuleFor(x => x.Slug)
             .Matches("^[a-z0-9-]+$")
             .When(x => !string.IsNullOrWhiteSpace(x.Slug))

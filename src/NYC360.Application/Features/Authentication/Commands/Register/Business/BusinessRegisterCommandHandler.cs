@@ -33,7 +33,7 @@ public class BusinessRegisterCommandHandler(
         // Create the new user entity
         var newUser = new ApplicationUser
         {
-            Type = UserType.Normal,
+            Type = UserType.Business,
             Email = request.Email,
             UserName = request.Username,
             

@@ -11,8 +11,8 @@ public class SubmitTagVerificationValidator: AbstractValidator<SubmitTagVerifica
         RuleFor(x => x.Reason)
             .NotEmpty()
             .MinimumLength(20)
-            .MaximumLength(500)
-            .WithMessage("Please provide a valid reason (20-500 chars).");
+            .MaximumLength(5000)
+            .WithMessage("Please provide a valid reason (20-5000 chars).");
 
         RuleFor(x => x.File)
             .NotNull()

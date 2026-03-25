@@ -56,7 +56,7 @@ public class GetCommunityMembersQueryHandler(
         var dtos = members.Select(m => new CommunityMemberDto(
             m.UserId,
             m.User?.GetFullName() ?? "Unknown",
-            m.User!.AvatarUrl,
+            m.User?.AvatarUrl,
             m.Role.ToString(),
             m.JoinedAt
         ));

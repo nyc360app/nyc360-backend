@@ -154,6 +154,11 @@ namespace NYC360.Infrastructure.Persistence.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
 
+                    b.Property<bool>("IsFeatured")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<bool>("IsPrivate")
                         .HasColumnType("bit");
 
@@ -172,6 +177,10 @@ namespace NYC360.Infrastructure.Persistence.Migrations
 
                     b.Property<bool>("RequiresApproval")
                         .HasColumnType("bit");
+
+                    b.Property<string>("Rules")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
 
                     b.Property<string>("Slug")
                         .IsRequired()
@@ -1790,6 +1799,9 @@ namespace NYC360.Infrastructure.Persistence.Migrations
                     b.Property<string>("AdminNote")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("AgreementAccepted")
+                        .HasColumnType("bit");
+
                     b.Property<byte>("Category")
                         .HasColumnType("tinyint");
 
@@ -1799,7 +1811,16 @@ namespace NYC360.Infrastructure.Persistence.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("DivisionTag")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Language")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LogoImageUrl")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
@@ -1811,6 +1832,12 @@ namespace NYC360.Infrastructure.Persistence.Migrations
 
                     b.Property<int>("RequesterId")
                         .HasColumnType("int");
+
+                    b.Property<string>("SourceCredibility")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SourceWebsite")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");

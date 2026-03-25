@@ -12,7 +12,7 @@ public class CreateCommunityEndpoint(IMediator mediator) : Endpoint<CreateCommun
     public override void Configure()
     {
         Post("/communities/create");
-        Roles("Resident", "Organization", "Business");
+        Roles("Resident", "Organization", "Business", "Admin", "SuperAdmin");
         AllowFileUploads();
     }
     
@@ -28,10 +28,13 @@ public class CreateCommunityEndpoint(IMediator mediator) : Endpoint<CreateCommun
             userId.Value,
             req.Name,
             req.Description,
+            req.Rules,
             req.Slug,
             req.Type,
             req.LocationId,
             req.IsPrivate,
+            req.RequiresApproval,
+            req.AnyoneCanPost,
             req.AvatarImage,
             req.CoverImage
         );

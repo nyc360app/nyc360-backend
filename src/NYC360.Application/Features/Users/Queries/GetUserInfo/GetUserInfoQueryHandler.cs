@@ -1,12 +1,15 @@
 using NYC360.Application.Contracts.Persistence;
+using Microsoft.AspNetCore.Identity;
 using NYC360.Domain.Dtos.User;
+using NYC360.Domain.Entities.User;
 using NYC360.Domain.Wrappers;
 using MediatR;
 
 namespace NYC360.Application.Features.Users.Queries.GetUserInfo;
 
 public class GetUserInfoQueryHandler(
-    IUserRepository userRepository)
+    IUserRepository userRepository,
+    UserManager<ApplicationUser> userManager)
     : IRequestHandler<GetUserInfoQuery, StandardResponse<UserInfoDto>>
 {
     public async Task<StandardResponse<UserInfoDto>> Handle(GetUserInfoQuery request, CancellationToken ct)
@@ -18,7 +21,11 @@ public class GetUserInfoQueryHandler(
             return StandardResponse<UserInfoDto>.Failure(new ApiError("user.not_found", "User profile not found."));
 
         // 2. Map to UserInfoDto
-        var dto = UserInfoDto.Map(user);
+        var roles = user.User is null
+            ? new List<string>()
+            : (await userManager.GetRolesAsync(user.User)).ToList();
+
+        var dto = UserInfoDto.Map(user, roles);
 
         return StandardResponse<UserInfoDto>.Success(dto);
     }

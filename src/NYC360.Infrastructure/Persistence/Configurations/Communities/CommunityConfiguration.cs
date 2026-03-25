@@ -14,7 +14,9 @@ public class CommunityConfiguration : IEntityTypeConfiguration<Community>
         builder.Property(c => c.Name).IsRequired();
         builder.Property(c => c.Slug).IsRequired();
         builder.Property(c => c.Description).IsRequired();
+        builder.Property(c => c.Rules).HasMaxLength(4000);
         builder.Property(c => c.IsActive).HasDefaultValue(true);
+        builder.Property(c => c.IsFeatured).HasDefaultValue(false);
 
         // Location: no cascade delete
         builder.HasOne(c => c.Location)

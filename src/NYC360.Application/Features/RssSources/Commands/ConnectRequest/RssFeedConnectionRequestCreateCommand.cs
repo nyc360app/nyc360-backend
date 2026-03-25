@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.AspNetCore.Http;
 using NYC360.Domain.Enums;
 using NYC360.Domain.Wrappers;
 
@@ -10,4 +11,10 @@ public record RssFeedConnectionRequestCreateCommand(
     string Name, 
     string? Description, 
     string? ImageUrl,
+    string? Language,
+    string? SourceWebsite,
+    string? SourceCredibility,
+    bool AgreementAccepted,
+    string? DivisionTag,
+    IFormFile? LogoImage,
     int RequesterId) : IRequest<StandardResponse>;

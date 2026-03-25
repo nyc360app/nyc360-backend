@@ -17,6 +17,7 @@ public sealed class CommunityRepository(ApplicationDbContext context) : ICommuni
     public async Task<Community?> GetByIdAsync(int id, CancellationToken ct)
     {
         return await context.Communities
+            .Include(c => c.Location)
             .Include(c => c.Members).ThenInclude(cm => cm.User)
             .FirstOrDefaultAsync(c => c.Id == id, ct);
     }
@@ -25,6 +26,10 @@ public sealed class CommunityRepository(ApplicationDbContext context) : ICommuni
     {
         return await context.Communities
             .AsNoTracking()
+            .Include(c => c.Location)
+            .Include(c => c.Members)
+                .ThenInclude(m => m.User)
+                    .ThenInclude(u => u!.User)
             .FirstOrDefaultAsync(c => c.Slug == slug, ct);
     }
 

@@ -27,6 +27,11 @@ public class UpdateCommunityInfoCommandValidator : AbstractValidator<UpdateCommu
             .When(x => !string.IsNullOrWhiteSpace(x.Description))
             .WithMessage("Description must be between 10 and 1000 characters.");
 
+        RuleFor(x => x.Rules)
+            .MaximumLength(4000)
+            .When(x => x.Rules != null)
+            .WithMessage("Rules must be 4000 characters or fewer.");
+
         RuleFor(x => x.AvatarImage)
             .Must(BeValidImage!)
             .When(x => x.AvatarImage != null)
