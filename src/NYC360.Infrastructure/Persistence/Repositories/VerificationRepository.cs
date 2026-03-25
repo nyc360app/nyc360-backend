@@ -26,6 +26,14 @@ public class VerificationRepository(ApplicationDbContext context) : IVerificatio
                            x.Status == VerificationStatus.Pending, ct);
     }
 
+    public async Task<bool> HasApprovedRequestAsync(int userId, int tagId, CancellationToken ct)
+    {
+        return await context.Set<TagVerificationRequest>()
+            .AnyAsync(x => x.UserId == userId &&
+                           x.TargetTagId == tagId &&
+                           x.Status == VerificationStatus.Approved, ct);
+    }
+
     public async Task<bool> UserHasSpecificTagAsync(int userId, int tagId, CancellationToken ct)
     {
         return await context.UserTags.AnyAsync(x => x.UserId == userId && x.TagId == tagId, ct);

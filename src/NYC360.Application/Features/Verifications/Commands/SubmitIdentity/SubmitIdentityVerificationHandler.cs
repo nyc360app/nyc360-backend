@@ -12,7 +12,6 @@ namespace NYC360.Application.Features.Verifications.Commands.SubmitIdentity;
 
 public class SubmitIdentityVerificationHandler(
     IVerificationRepository verificationRepository,
-    ITagRepository tagRepository,
     UserManager<ApplicationUser> userManager,
     ILocalStorageService storageService,
     IUnitOfWork unitOfWork)
@@ -22,7 +21,10 @@ public class SubmitIdentityVerificationHandler(
     {
         // 1. Determine the Tag based on Role
         var user = await userManager.FindByIdAsync(request.UserId.ToString());
-        var roles = await userManager.GetRolesAsync(user!);
+        if (user is null)
+            return StandardResponse.Failure(new ApiError("user.not_found", "User not found."));
+
+        var roles = await userManager.GetRolesAsync(user);
         var roleName = roles.FirstOrDefault();
 
         // Map Role to Tag ID (Based on your Tags.csv)
@@ -34,7 +36,9 @@ public class SubmitIdentityVerificationHandler(
         };
 
         // 2. Security Checks
-        if (await verificationRepository.UserHasSpecificTagAsync(request.UserId, targetTagId, ct))
+        // Identity tags may be attached at signup, so we gate by verification request status
+        // instead of raw tag existence.
+        if (await verificationRepository.HasApprovedRequestAsync(request.UserId, targetTagId, ct))
             return StandardResponse.Failure(new ApiError("verify.already_verified", "You already have this identity verified."));
 
         if (await verificationRepository.HasPendingRequestAsync(request.UserId, targetTagId, ct))
