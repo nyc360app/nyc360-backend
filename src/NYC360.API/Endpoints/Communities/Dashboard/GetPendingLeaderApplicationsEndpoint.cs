@@ -24,11 +24,35 @@ public class GetPendingLeaderApplicationsEndpoint(IMediator mediator)
         var pageSize = Query<int>("pageSize", false);
         if (pageSize == 0) pageSize = 10;
 
-        var status = Query<CommunityLeaderApplicationStatus?>("status", false) ?? CommunityLeaderApplicationStatus.Pending;
+        var status = ParseStatusOrDefault(Query<string>("status", false), CommunityLeaderApplicationStatus.Pending);
 
         var query = new GetCommunityLeaderApplicationsQuery(page, pageSize, status);
         var result = await mediator.Send(query, ct);
 
         await Send.OkAsync(result, ct);
+    }
+
+    private static CommunityLeaderApplicationStatus ParseStatusOrDefault(
+        string? rawStatus,
+        CommunityLeaderApplicationStatus fallback)
+    {
+        if (string.IsNullOrWhiteSpace(rawStatus))
+            return fallback;
+
+        var normalized = rawStatus.Trim().Trim('"', '\'');
+
+        if (Enum.TryParse<CommunityLeaderApplicationStatus>(normalized, true, out var parsedByName) &&
+            Enum.IsDefined(typeof(CommunityLeaderApplicationStatus), parsedByName))
+        {
+            return parsedByName;
+        }
+
+        if (byte.TryParse(normalized, out var numeric) &&
+            Enum.IsDefined(typeof(CommunityLeaderApplicationStatus), (int)numeric))
+        {
+            return (CommunityLeaderApplicationStatus)numeric;
+        }
+
+        return fallback;
     }
 }
