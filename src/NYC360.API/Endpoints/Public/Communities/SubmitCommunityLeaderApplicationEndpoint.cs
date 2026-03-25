@@ -14,13 +14,14 @@ namespace NYC360.API.Endpoints.Public.Communities;
 public class SubmitCommunityLeaderApplicationEndpoint(
     IMediator mediator,
     IUserRepository userRepository,
+    IVerificationRepository verificationRepository,
     UserManager<ApplicationUser> userManager)
     : Endpoint<SubmitCommunityLeaderApplicationRequest, StandardResponse<CommunityLeaderApplicationSubmissionDto>>
 {
     public override void Configure()
     {
         Post("/communities/leader-applications/submit");
-        Roles("Resident", "Organization", "Business", "Admin", "SuperAdmin");
+        Roles("Resident", "NewYorker", "Organization", "Business", "Admin", "SuccessAdmin", "SuperAdmin");
         AllowFileUploads();
         Summary(s =>
         {
@@ -82,12 +83,14 @@ public class SubmitCommunityLeaderApplicationEndpoint(
             return false;
 
         var roles = await userManager.GetRolesAsync(profile.User);
-        var isStaff = roles.Contains("SuperAdmin") || roles.Contains("Admin");
+        var isStaff = roles.Contains("SuperAdmin") || roles.Contains("SuccessAdmin") || roles.Contains("Admin");
         if (isStaff)
             return true;
 
-        var isAllowedRole = roles.Contains("Resident") || roles.Contains("Organization") || roles.Contains("Business");
+        var isAllowedRole = roles.Contains("Resident") || roles.Contains("NewYorker") || roles.Contains("Organization") || roles.Contains("Business");
         var isVerified = profile.Stats?.IsVerified ?? false;
+        if (!isVerified)
+            isVerified = await verificationRepository.HasApprovedIdentityRequestAsync(userId, ct);
 
         return isAllowedRole && isVerified;
     }

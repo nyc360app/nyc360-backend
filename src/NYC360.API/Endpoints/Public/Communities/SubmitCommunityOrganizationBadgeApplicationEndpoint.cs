@@ -15,13 +15,14 @@ namespace NYC360.API.Endpoints.Public.Communities;
 public class SubmitCommunityOrganizationBadgeApplicationEndpoint(
     IMediator mediator,
     IUserRepository userRepository,
+    IVerificationRepository verificationRepository,
     UserManager<ApplicationUser> userManager)
     : Endpoint<SubmitCommunityLeaderApplicationRequest, StandardResponse>
 {
     public override void Configure()
     {
         Post("/communities/organization-listing-badge/submit");
-        Roles("Resident", "Organization", "Business", "Admin", "SuperAdmin");
+        Roles("Resident", "NewYorker", "Organization", "Business", "Admin", "SuccessAdmin", "SuperAdmin");
         AllowFileUploads();
     }
 
@@ -103,12 +104,14 @@ public class SubmitCommunityOrganizationBadgeApplicationEndpoint(
             return false;
 
         var roles = await userManager.GetRolesAsync(profile.User);
-        var isStaff = roles.Contains("SuperAdmin") || roles.Contains("Admin");
+        var isStaff = roles.Contains("SuperAdmin") || roles.Contains("SuccessAdmin") || roles.Contains("Admin");
         if (isStaff)
             return true;
 
-        var isAllowedRole = roles.Contains("Resident") || roles.Contains("Organization") || roles.Contains("Business");
+        var isAllowedRole = roles.Contains("Resident") || roles.Contains("NewYorker") || roles.Contains("Organization") || roles.Contains("Business");
         var isVerified = profile.Stats?.IsVerified ?? false;
+        if (!isVerified)
+            isVerified = await verificationRepository.HasApprovedIdentityRequestAsync(userId, ct);
 
         return isAllowedRole && isVerified;
     }

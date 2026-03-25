@@ -53,6 +53,7 @@ public class UserRepository(
     public async Task<UserProfile?> GetProfileByUserIdAsync(int userId, CancellationToken ct)
     {
         return await db.UserProfiles
+            .Include(up => up.Stats)
             .Include(up => up.User)
             .FirstOrDefaultAsync(up => up.UserId == userId, ct);
     }

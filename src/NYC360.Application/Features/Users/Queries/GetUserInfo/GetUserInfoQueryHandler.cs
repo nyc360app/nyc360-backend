@@ -9,6 +9,7 @@ namespace NYC360.Application.Features.Users.Queries.GetUserInfo;
 
 public class GetUserInfoQueryHandler(
     IUserRepository userRepository,
+    IVerificationRepository verificationRepository,
     UserManager<ApplicationUser> userManager)
     : IRequestHandler<GetUserInfoQuery, StandardResponse<UserInfoDto>>
 {
@@ -26,6 +27,15 @@ public class GetUserInfoQueryHandler(
             : (await userManager.GetRolesAsync(user.User)).ToList();
 
         var dto = UserInfoDto.Map(user, roles);
+
+        // Backward-compatible verification source:
+        // some legacy accounts have approved identity requests but null/false stats flag.
+        if (!dto.IsVerified)
+        {
+            var hasApprovedIdentity = await verificationRepository.HasApprovedIdentityRequestAsync(request.UserId, ct);
+            if (hasApprovedIdentity)
+                dto = dto with { IsVerified = true };
+        }
 
         return StandardResponse<UserInfoDto>.Success(dto);
     }

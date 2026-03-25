@@ -3,6 +3,7 @@ using NYC360.Application.Contracts.Persistence;
 using Microsoft.EntityFrameworkCore;
 using NYC360.Domain.Entities.Tags;
 using NYC360.Domain.Enums;
+using NYC360.Domain.Enums.Tags;
 
 namespace NYC360.Infrastructure.Persistence.Repositories;
 
@@ -32,6 +33,15 @@ public class VerificationRepository(ApplicationDbContext context) : IVerificatio
             .AnyAsync(x => x.UserId == userId &&
                            x.TargetTagId == tagId &&
                            x.Status == VerificationStatus.Approved, ct);
+    }
+
+    public async Task<bool> HasApprovedIdentityRequestAsync(int userId, CancellationToken ct)
+    {
+        return await context.Set<TagVerificationRequest>()
+            .AnyAsync(x => x.UserId == userId &&
+                           x.Status == VerificationStatus.Approved &&
+                           x.TargetTag != null &&
+                           x.TargetTag.Type == TagType.Identity, ct);
     }
 
     public async Task<bool> UserHasSpecificTagAsync(int userId, int tagId, CancellationToken ct)
