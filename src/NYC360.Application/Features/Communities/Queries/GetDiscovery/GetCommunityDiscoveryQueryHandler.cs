@@ -1,5 +1,4 @@
 using NYC360.Application.Contracts.Persistence;
-using NYC360.Domain.Enums.Communities;
 using NYC360.Domain.Dtos.Communities;
 using NYC360.Domain.Wrappers;
 using MediatR;
@@ -21,16 +20,7 @@ public class GetCommunityDiscoveryQueryHandler(ICommunityRepository communityRep
             request.PageSize,
             ct);
 
-        var dtos = items.Select(c => new CommunityDiscoveryDto(
-            c.Id,
-            c.Name,
-            c.Slug,
-            c.Description,
-            c.AvatarUrl,
-            c.Type ?? CommunityType.Neighborhood,
-            c.Members.Count, // Assuming Members are included or count is projected
-            c.IsPrivate
-        ));
+        var dtos = items.Select(c => CommunityDiscoveryDto.Map(c));
 
         return PagedResponse<CommunityDiscoveryDto>.Create(dtos, request.Page, request.PageSize, total);
     }

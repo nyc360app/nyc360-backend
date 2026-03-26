@@ -25,8 +25,8 @@ public static class CommunityDiscoveryDtoExtensions
                 community.Name,
                 community.Slug,
                 community.Description,
-                community.AvatarUrl,
-                community.Type,
+                CommunityMediaPath.ToPublicPath(community.AvatarUrl),
+                community.Type ?? CommunityType.Neighborhood,
                 community.MemberCount,
                 community.IsPrivate
             );

@@ -98,10 +98,16 @@ public class CreateCommunityCommandHandler(
         });
 
         if (request.AvatarImage != null)
-            entity.AvatarUrl = await localStorageService.SaveFileAsync(request.AvatarImage, "communities", ct);
+        {
+            var avatarPath = await localStorageService.SaveFileAsync(request.AvatarImage, "communities", ct);
+            entity.AvatarUrl = "@local://" + avatarPath;
+        }
 
         if (request.CoverImage != null)
-            entity.CoverUrl = await localStorageService.SaveFileAsync(request.CoverImage, "communities", ct);
+        {
+            var coverPath = await localStorageService.SaveFileAsync(request.CoverImage, "communities", ct);
+            entity.CoverUrl = "@local://" + coverPath;
+        }
 
         await communityRepository.AddAsync(entity, ct);
         await unitOfWork.SaveChangesAsync(ct);

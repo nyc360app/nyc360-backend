@@ -1,5 +1,4 @@
 using NYC360.Application.Contracts.Persistence;
-using NYC360.Domain.Enums.Communities;
 using NYC360.Domain.Dtos.Communities;
 using NYC360.Domain.Dtos.Posts;
 using NYC360.Domain.Dtos.Tags;
@@ -28,9 +27,7 @@ public class GetCommunityHomeQueryHandler(
 
         // 2. Get Suggestions (Communities user hasn't joined yet)
         var suggestions = await communityRepository.GetSuggestionsAsync(request.UserId, 5, ct);
-        var suggestionDtos = suggestions.Select(c => new CommunityDiscoveryDto(
-            c.Id, c.Name, c.Slug, c.Description, c.AvatarUrl, c.Type ?? CommunityType.Neighborhood, c.Members.Count, c.IsPrivate
-        )).ToList();
+        var suggestionDtos = suggestions.Select(c => CommunityDiscoveryDto.Map(c)).ToList();
 
         // 3. Fetch Tags for Communities
         var tags = await tagRepository.GetTagsByDivisionAsync(Category.Community, ct);
