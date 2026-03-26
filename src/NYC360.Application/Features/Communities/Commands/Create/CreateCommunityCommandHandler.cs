@@ -13,6 +13,7 @@ namespace NYC360.Application.Features.Communities.Commands.Create;
 
 public class CreateCommunityCommandHandler(
     IUserRepository userRepository,
+    IVerificationRepository verificationRepository,
     ITagRepository tagRepository,
     ILocationRepository locationRepository,
     ICommunityRepository communityRepository,
@@ -32,8 +33,10 @@ public class CreateCommunityCommandHandler(
             return StandardResponse<string>.Failure(new ApiError("user.identityMissing", "Identity data not loaded. Check repository includes."));
 
         var userRoles = await userManager.GetRolesAsync(user.User);
-        var isStaff = userRoles.Contains("SuperAdmin") || userRoles.Contains("Admin");
+        var isStaff = userRoles.Contains("SuperAdmin") || userRoles.Contains("SuccessAdmin") || userRoles.Contains("Admin");
         var isVerified = user.Stats?.IsVerified ?? false;
+        if (!isVerified)
+            isVerified = await verificationRepository.HasApprovedIdentityRequestAsync(request.UserId, ct);
 
         if (!isVerified && !isStaff)
         {
@@ -41,18 +44,24 @@ public class CreateCommunityCommandHandler(
                 new ApiError("user.notVerified", "Only verified users can create communities"));
         }
 
-        // D01.2 gate: community creation requires the verified contributor tag, except staff.
-        var hasCreateCommunityTag = isStaff || await tagRepository.UserHasTagAsync(
+        // D01 gate: community creation is allowed for approved Community Leader OR
+        // approved Community Organization contributor, with staff bypass.
+        var hasCommunityLeaderTag = await tagRepository.UserHasTagAsync(
             request.UserId,
-            CommunityVerificationTags.ApplyForCreateACommunityName,
+            CommunityVerificationTags.ApplyForCommunityLeaderBadgesName,
             ct);
+        var hasCommunityOrganizationTag = await tagRepository.UserHasTagAsync(
+            request.UserId,
+            CommunityVerificationTags.ListCommunityOrganizationInSpaceName,
+            ct);
+        var hasEligibleContributorAccess = isStaff || hasCommunityLeaderTag || hasCommunityOrganizationTag;
 
-        if (!hasCreateCommunityTag)
+        if (!hasEligibleContributorAccess)
         {
             return StandardResponse<string>.Failure(
                 new ApiError(
-                    "community.create.requiresContributorTag",
-                    "You must be approved for 'Create a Community' before creating communities."));
+                    "community.create.requiresEligibleContributor",
+                    "Only approved Community Leaders or approved Community Organization contributors can create a community."));
         }
 
         if (request.LocationId.HasValue && !await locationRepository.ExistsAsync(request.LocationId.Value, ct))

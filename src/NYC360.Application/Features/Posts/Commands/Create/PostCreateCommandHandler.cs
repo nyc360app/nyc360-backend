@@ -2,8 +2,10 @@ using NYC360.Application.Contracts.Persistence;
 using NYC360.Application.Contracts.Services;
 using NYC360.Application.Contracts.Storage;
 using Microsoft.AspNetCore.Identity;
+using NYC360.Domain.Constants;
 using NYC360.Domain.Entities.Posts;
 using NYC360.Domain.Entities.User;
+using NYC360.Domain.Enums;
 using NYC360.Domain.Enums.Posts;
 using NYC360.Domain.Dtos.Posts;
 using NYC360.Domain.Wrappers;
@@ -46,7 +48,7 @@ public class PostCreateCommandHandler(
         }
         
         // Checks if the user's profile contains a tag belonging to the requested Category/Division
-        bool isStaff = roleName == "SuperAdmin" || roleName == "Admin";
+        bool isStaff = roleName == "SuperAdmin" || roleName == "SuccessAdmin" || roleName == "Admin";
         bool isEligible = isStaff;
         bool autoApprove = true;
 
@@ -69,7 +71,20 @@ public class PostCreateCommandHandler(
             autoApprove = newsAccess.CanPublishContent;
         }
 
-        if (!isEligible && request.Category != Domain.Enums.Category.News)
+        if (!isEligible && request.Category == Category.Community)
+        {
+            var hasCommunityLeaderTag = await tagRepository.UserHasTagAsync(
+                request.UserId,
+                CommunityVerificationTags.ApplyForCommunityLeaderBadgesName,
+                cancellationToken);
+            var hasCommunityOrganizationTag = await tagRepository.UserHasTagAsync(
+                request.UserId,
+                CommunityVerificationTags.ListCommunityOrganizationInSpaceName,
+                cancellationToken);
+            isEligible = hasCommunityLeaderTag || hasCommunityOrganizationTag;
+        }
+
+        if (!isEligible && request.Category != Category.News)
         {
             isEligible = await tagRepository.UserHasTagForDivisionAsync(request.UserId, request.Category, cancellationToken);
         }

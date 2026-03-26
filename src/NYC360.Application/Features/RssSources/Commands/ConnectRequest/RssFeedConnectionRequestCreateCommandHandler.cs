@@ -1,6 +1,7 @@
 using NYC360.Application.Contracts.Persistence;
 using NYC360.Application.Contracts.Services;
 using NYC360.Application.Contracts.Storage;
+using NYC360.Domain.Constants;
 using NYC360.Domain.Entities;
 using NYC360.Domain.Wrappers;
 using NYC360.Domain.Enums;
@@ -12,6 +13,8 @@ public class RssFeedConnectionRequestCreateCommandHandler(
     IRssFeedConnectionRequestRepository requestRepo,
     IRssSourceRepository rssSourceRepo,
     INewsAuthorizationService newsAuthorizationService,
+    IUserRepository userRepository,
+    ITagRepository tagRepository,
     ILocalStorageService localStorageService)
     : IRequestHandler<RssFeedConnectionRequestCreateCommand, StandardResponse>
 {
@@ -34,6 +37,33 @@ public class RssFeedConnectionRequestCreateCommandHandler(
             var access = await newsAuthorizationService.GetAccessAsync(request.RequesterId, cancellationToken);
             if (access == null || !access.CanConnectRss)
                 return StandardResponse.Failure(new ApiError("news.rss_forbidden", "Only Publisher-level News users can connect News RSS feeds."));
+        }
+        else if (request.Category == Category.Community)
+        {
+            var profile = await userRepository.GetProfileInfoByUserIdAsync(request.RequesterId, cancellationToken);
+            if (profile?.User == null)
+                return StandardResponse.Failure(new ApiError("auth.notfound", "User not found."));
+
+            var roles = await userRepository.GetUserRolesAsync(profile.User, cancellationToken);
+            var isStaff = roles.Contains("SuperAdmin", StringComparer.OrdinalIgnoreCase)
+                || roles.Contains("SuccessAdmin", StringComparer.OrdinalIgnoreCase)
+                || roles.Contains("Admin", StringComparer.OrdinalIgnoreCase);
+
+            var hasCommunityLeaderTag = await tagRepository.UserHasTagAsync(
+                request.RequesterId,
+                CommunityVerificationTags.ApplyForCommunityLeaderBadgesName,
+                cancellationToken);
+            var hasCommunityOrganizationTag = await tagRepository.UserHasTagAsync(
+                request.RequesterId,
+                CommunityVerificationTags.ListCommunityOrganizationInSpaceName,
+                cancellationToken);
+
+            if (!isStaff && !hasCommunityLeaderTag && !hasCommunityOrganizationTag)
+            {
+                return StandardResponse.Failure(new ApiError(
+                    "community.rss.requiresEligibleContributor",
+                    "Only approved Community Leaders or approved Community Organization contributors can connect Community RSS feeds."));
+            }
         }
 
         var urlExists = await rssSourceRepo.ExistsAsync(normalizedUrl, cancellationToken);
