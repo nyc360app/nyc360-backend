@@ -12,6 +12,7 @@ public class ReviewSpaceListingCommandHandler(
     ISpaceListingRepository listingRepository,
     ILocationRepository locationRepository,
     ISpaceIntegrationService spaceIntegrationService,
+    IApprovedSpaceLocationStore approvedSpaceLocationStore,
     IUnitOfWork unitOfWork)
     : IRequestHandler<ReviewSpaceListingCommand, StandardResponse>
 {
@@ -47,16 +48,26 @@ public class ReviewSpaceListingCommandHandler(
 
         if (request.Decision == SpaceListingStatus.Approved)
         {
-            await SpaceListingLocationSync.EnsureLocationLinkedAsync(listing, locationRepository, ct);
             listing.OwnershipStatus = listing.IsClaimingOwnership ? SpaceListingOwnershipStatus.Approved : SpaceListingOwnershipStatus.None;
             if (listing.IsClaimingOwnership)
                 listing.ClaimedByUserId = listing.SubmitterUserId;
-            var publishResult = await PublishToSpaceAsync(listing, spaceIntegrationService, ct);
-            if (!publishResult.IsSuccess)
+
+            if (listing.EntityType == SpaceListingEntityType.Location)
             {
-                listingRepository.Update(listing);
-                await unitOfWork.SaveChangesAsync(ct);
-                return publishResult;
+                await approvedSpaceLocationStore.UpsertAsync(listing, request.ReviewerUserId, ct);
+                listing.LastPublishAttemptAt = DateTime.UtcNow;
+                listing.LastPublishError = null;
+            }
+            else
+            {
+                await SpaceListingLocationSync.EnsureLocationLinkedAsync(listing, locationRepository, ct);
+                var publishResult = await PublishToSpaceAsync(listing, spaceIntegrationService, ct);
+                if (!publishResult.IsSuccess)
+                {
+                    listingRepository.Update(listing);
+                    await unitOfWork.SaveChangesAsync(ct);
+                    return publishResult;
+                }
             }
         }
 

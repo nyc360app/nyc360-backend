@@ -11,6 +11,7 @@ public class PublishSpaceListingCommandHandler(
     ISpaceListingRepository listingRepository,
     ILocationRepository locationRepository,
     ISpaceIntegrationService spaceIntegrationService,
+    IApprovedSpaceLocationStore approvedSpaceLocationStore,
     IUnitOfWork unitOfWork)
     : IRequestHandler<PublishSpaceListingCommand, StandardResponse>
 {
@@ -25,6 +26,17 @@ public class PublishSpaceListingCommandHandler(
 
         if (listing.Status is not (SpaceListingStatus.Approved or SpaceListingStatus.PublishedToSpace or SpaceListingStatus.Claimed))
             return StandardResponse.Failure(new ApiError("space.publish.invalid_status", "Listing is not ready to publish."));
+
+        if (listing.EntityType == SpaceListingEntityType.Location)
+        {
+            await approvedSpaceLocationStore.UpsertAsync(listing, request.ReviewerUserId, ct);
+            listing.LastPublishAttemptAt = DateTime.UtcNow;
+            listing.LastPublishError = null;
+            listing.Touch();
+            listingRepository.Update(listing);
+            await unitOfWork.SaveChangesAsync(ct);
+            return StandardResponse.Success();
+        }
 
         await SpaceListingLocationSync.EnsureLocationLinkedAsync(listing, locationRepository, ct);
 
