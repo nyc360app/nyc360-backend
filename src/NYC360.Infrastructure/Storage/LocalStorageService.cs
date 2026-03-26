@@ -1,15 +1,14 @@
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using NYC360.Application.Contracts.Storage;
 
 namespace NYC360.Infrastructure.Storage;
 
-public class LocalStorageService : ILocalStorageService
+public class LocalStorageService(IWebHostEnvironment environment) : ILocalStorageService
 {
-    private static readonly string FolderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-    
     public async Task<string> SaveFileAsync(IFormFile file, string subfolder, CancellationToken ct = default)
     {
-        var uploadPath = Path.Combine(FolderPath, subfolder);
+        var uploadPath = Path.Combine(GetStorageRootPath(), subfolder);
         
         if (!Directory.Exists(uploadPath))
         {
@@ -40,11 +39,27 @@ public class LocalStorageService : ILocalStorageService
             return;
         }
 
-        var filePath = Path.Combine(FolderPath, subfolder, fileUrl);
+        var normalized = fileUrl.Trim().Replace("\\", "/");
+        if (normalized.StartsWith("@local://", StringComparison.OrdinalIgnoreCase))
+            normalized = normalized["@local://".Length..];
+        if (normalized.StartsWith('/'))
+            normalized = normalized.TrimStart('/');
+
+        var fileName = Path.GetFileName(normalized);
+        var filePath = Path.Combine(GetStorageRootPath(), subfolder, fileName);
 
         if (File.Exists(filePath))
         {
             File.Delete(filePath);
         }
+    }
+
+    private string GetStorageRootPath()
+    {
+        var webRoot = environment.WebRootPath;
+        if (!string.IsNullOrWhiteSpace(webRoot))
+            return webRoot;
+
+        return Path.Combine(environment.ContentRootPath, "wwwroot");
     }
 }
