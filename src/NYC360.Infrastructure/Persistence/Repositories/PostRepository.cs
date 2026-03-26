@@ -214,11 +214,16 @@ public sealed class PostRepository(ApplicationDbContext db) : IPostRepository
 
     public async Task<(List<PostDto>, int)> GetFeedByCommunityIdsAsync(int? userId, List<int> communityIds, int page, int pageSize, CancellationToken ct)
     {
-        // 1. Filter posts that belong to the provided community IDs
+        // 1. Build Community feed:
+        // - Current behavior: posts from communities the user joined
+        // - Legacy compatibility: old Community-category posts with null CommunityId
+        //   (created by older frontend defaults) are also included.
         var baseQuery = db.Posts
             .AsNoTracking()
             .Where(p => p.IsApproved)
-            .Where(p => p.CommunityId != null && communityIds.Contains(p.CommunityId.Value));
+            .Where(p =>
+                (p.CommunityId != null && communityIds.Contains(p.CommunityId.Value)) ||
+                (p.CommunityId == null && p.Category == Category.Community));
 
         // 2. Count total results for pagination
         var total = await baseQuery.CountAsync(ct);

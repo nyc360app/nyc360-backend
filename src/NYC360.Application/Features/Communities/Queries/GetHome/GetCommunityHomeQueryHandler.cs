@@ -20,16 +20,11 @@ public class GetCommunityHomeQueryHandler(
         // 1. Get IDs of communities the user has joined
         var joinedIds = await communityRepository.GetJoinedCommunityIdsAsync(request.UserId, ct);
 
-        PagedResponse<PostDto> feed;
-        if (joinedIds.Any())
-        {
-            var (posts, total) = await postRepository.GetFeedByCommunityIdsAsync(request.UserId, joinedIds, request.Page, request.PageSize, ct);
-            feed = PagedResponse<PostDto>.Create(posts, request.Page, request.PageSize, total);
-        }
-        else
-        {
-            feed = PagedResponse<PostDto>.Create(new List<PostDto>(), request.Page, request.PageSize, 0);
-        }
+        // The feed includes:
+        // - Posts from communities the user has joined (all post types)
+        // - Legacy Community-category posts that were created without CommunityId
+        var (posts, total) = await postRepository.GetFeedByCommunityIdsAsync(request.UserId, joinedIds, request.Page, request.PageSize, ct);
+        var feed = PagedResponse<PostDto>.Create(posts, request.Page, request.PageSize, total);
 
         // 2. Get Suggestions (Communities user hasn't joined yet)
         var suggestions = await communityRepository.GetSuggestionsAsync(request.UserId, 5, ct);
