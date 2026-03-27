@@ -27,6 +27,7 @@ public static class ServicesRegistration
         services.AddScoped<IRssFeedService, RssFeedService>();
         services.AddScoped<ICommunityPermissionService, CommunityPermissionService>();
         services.AddScoped<INewsAuthorizationService, NewsAuthorizationService>();
+        services.AddScoped<INewsPollService, NewsPollService>();
         services.AddScoped<IStripeService, StripeService>();
         services.AddScoped<IApprovedSpaceLocationStore, ApprovedSpaceLocationStore>();
         services.AddHttpClient<ISpaceIntegrationService, SpaceIntegrationService>();

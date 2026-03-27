@@ -20,6 +20,7 @@ public class NewsAuthorizationService(IUserRepository userRepository) : INewsAut
 
         var roles = await userRepository.GetUserRolesAsync(profile.User, ct);
         var isStaff = roles.Contains("SuperAdmin", StringComparer.OrdinalIgnoreCase)
+            || roles.Contains("SuccessAdmin", StringComparer.OrdinalIgnoreCase)
             || roles.Contains("Admin", StringComparer.OrdinalIgnoreCase)
             || profile.User.Type == UserType.Admin;
 
