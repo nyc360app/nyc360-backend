@@ -130,14 +130,14 @@ public class NewsPollService(
         return PagedResponse<NewsPollListItemDto>.Create(items, page, pageSize, totalCount);
     }
 
-    public async Task<PagedResponse<NewsPollSummaryDto>> GetPublishedAsync(int page, int pageSize, CancellationToken ct)
+    public async Task<PagedResponse<NewsPollSummaryDto>> GetPublishedAsync(int? requesterUserId, int page, int pageSize, CancellationToken ct)
     {
         page = page <= 0 ? 1 : page;
         pageSize = pageSize <= 0 ? 20 : Math.Min(pageSize, 100);
 
         var connection = await GetOpenConnectionAsync(ct);
         var totalCount = await GetPublishedTotalCountAsync(connection, ct);
-        var items = await GetPublishedItemsAsync(connection, page, pageSize, ct);
+        var items = await GetPublishedItemsAsync(connection, requesterUserId, page, pageSize, ct);
 
         return PagedResponse<NewsPollSummaryDto>.Create(items, page, pageSize, totalCount);
     }
@@ -835,6 +835,7 @@ public class NewsPollService(
 
     private async Task<List<NewsPollSummaryDto>> GetPublishedItemsAsync(
         DbConnection connection,
+        int? requesterUserId,
         int page,
         int pageSize,
         CancellationToken ct)
@@ -843,13 +844,19 @@ public class NewsPollService(
         cmd.CommandText = """
             SELECT p.[Id], p.[Slug], p.[Title], p.[Question], p.[Description], p.[CoverImageUrl], p.[Status],
                    p.[AllowMultipleAnswers], p.[ShowResultsBeforeVoting], p.[CreatedAt], p.[ClosesAt],
-                   (SELECT COUNT(1) FROM [NewsPollVotes] v WHERE v.[PollId] = p.[Id]) AS [TotalVotes]
+                   p.[IsFeatured],
+                   (SELECT COUNT(1) FROM [NewsPollVotes] v WHERE v.[PollId] = p.[Id]) AS [TotalVotes],
+                   (SELECT CASE WHEN EXISTS(
+                        SELECT 1 FROM [NewsPollVotes] v2
+                        WHERE v2.[PollId] = p.[Id] AND v2.[VoterUserId] = @viewerUserId
+                    ) THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END) AS [HasVoted]
             FROM [NewsPolls] p
             WHERE p.[Status] = @status
             ORDER BY p.[CreatedAt] DESC
             OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY;
             """;
         AddParameter(cmd, "@status", (byte)NewsPollStatus.Published, DbType.Byte);
+        AddParameter(cmd, "@viewerUserId", requesterUserId ?? 0);
         AddParameter(cmd, "@offset", (page - 1) * pageSize);
         AddParameter(cmd, "@pageSize", pageSize);
 
@@ -874,9 +881,11 @@ public class NewsPollService(
                 ToStatusLabel(rawStatus, closesAt),
                 reader.GetBoolean(reader.GetOrdinal("AllowMultipleAnswers")),
                 reader.GetBoolean(reader.GetOrdinal("ShowResultsBeforeVoting")),
+                reader.GetBoolean(reader.GetOrdinal("IsFeatured")),
                 reader.GetInt32(reader.GetOrdinal("TotalVotes")),
                 reader.GetDateTime(reader.GetOrdinal("CreatedAt")),
-                closesAt));
+                closesAt,
+                reader.GetBoolean(reader.GetOrdinal("HasVoted"))));
         }
 
         return list;

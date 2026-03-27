@@ -10,7 +10,9 @@ public record NewsPollSummaryDto(
     string Status,
     bool AllowMultipleAnswers,
     bool ShowResultsBeforeVoting,
+    bool IsFeatured,
     int TotalVotes,
     DateTime CreatedAt,
-    DateTime? ClosesAt
+    DateTime? ClosesAt,
+    bool HasVoted
 );

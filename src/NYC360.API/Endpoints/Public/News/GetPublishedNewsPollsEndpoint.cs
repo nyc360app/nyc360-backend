@@ -17,7 +17,7 @@ public class GetPublishedNewsPollsEndpoint(INewsPollService newsPollService)
 
     public override async Task HandleAsync(GetPublishedNewsPollsRequest req, CancellationToken ct)
     {
-        var result = await newsPollService.GetPublishedAsync(req.Page, req.PageSize, ct);
+        var result = await newsPollService.GetPublishedAsync(User.GetId(), req.Page, req.PageSize, ct);
         await Send.OkAsync(result, ct);
     }
 }
