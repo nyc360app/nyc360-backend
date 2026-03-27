@@ -8,6 +8,7 @@ public interface INewsPollService
 {
     Task<StandardResponse<NewsPollCreateResultDto>> CreateAsync(int userId, NewsPollCreateInput input, CancellationToken ct);
     Task<PagedResponse<NewsPollListItemDto>> GetMineAsync(int userId, NewsPollStatus? status, int page, int pageSize, CancellationToken ct);
+    Task<PagedResponse<NewsPollSummaryDto>> GetPublishedAsync(int page, int pageSize, CancellationToken ct);
     Task<StandardResponse<NewsPollDetailsDto>> GetByIdAsync(int? requesterUserId, int pollId, CancellationToken ct);
     Task<StandardResponse<NewsPollCreateResultDto>> UpdateAsync(int userId, int pollId, NewsPollUpdateInput input, CancellationToken ct);
     Task<StandardResponse<NewsPollVoteResultDto>> VoteAsync(int userId, int pollId, IReadOnlyCollection<int> optionIds, CancellationToken ct);

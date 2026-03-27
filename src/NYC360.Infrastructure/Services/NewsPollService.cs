@@ -130,6 +130,18 @@ public class NewsPollService(
         return PagedResponse<NewsPollListItemDto>.Create(items, page, pageSize, totalCount);
     }
 
+    public async Task<PagedResponse<NewsPollSummaryDto>> GetPublishedAsync(int page, int pageSize, CancellationToken ct)
+    {
+        page = page <= 0 ? 1 : page;
+        pageSize = pageSize <= 0 ? 20 : Math.Min(pageSize, 100);
+
+        var connection = await GetOpenConnectionAsync(ct);
+        var totalCount = await GetPublishedTotalCountAsync(connection, ct);
+        var items = await GetPublishedItemsAsync(connection, page, pageSize, ct);
+
+        return PagedResponse<NewsPollSummaryDto>.Create(items, page, pageSize, totalCount);
+    }
+
     public async Task<StandardResponse<NewsPollDetailsDto>> GetByIdAsync(int? requesterUserId, int pollId, CancellationToken ct)
     {
         var poll = await GetPollAsync(pollId, ct);
@@ -803,6 +815,68 @@ public class NewsPollService(
                 reader.GetDateTime(reader.GetOrdinal("CreatedAt")),
                 closesAt,
                 reader.GetBoolean(reader.GetOrdinal("HasVoted"))));
+        }
+
+        return list;
+    }
+
+    private async Task<int> GetPublishedTotalCountAsync(DbConnection connection, CancellationToken ct)
+    {
+        await using var cmd = connection.CreateCommand();
+        cmd.CommandText = """
+            SELECT COUNT(1)
+            FROM [NewsPolls]
+            WHERE [Status] = @status;
+            """;
+        AddParameter(cmd, "@status", (byte)NewsPollStatus.Published, DbType.Byte);
+        var result = await cmd.ExecuteScalarAsync(ct);
+        return result == null ? 0 : Convert.ToInt32(result);
+    }
+
+    private async Task<List<NewsPollSummaryDto>> GetPublishedItemsAsync(
+        DbConnection connection,
+        int page,
+        int pageSize,
+        CancellationToken ct)
+    {
+        await using var cmd = connection.CreateCommand();
+        cmd.CommandText = """
+            SELECT p.[Id], p.[Slug], p.[Title], p.[Question], p.[Description], p.[CoverImageUrl], p.[Status],
+                   p.[AllowMultipleAnswers], p.[ShowResultsBeforeVoting], p.[CreatedAt], p.[ClosesAt],
+                   (SELECT COUNT(1) FROM [NewsPollVotes] v WHERE v.[PollId] = p.[Id]) AS [TotalVotes]
+            FROM [NewsPolls] p
+            WHERE p.[Status] = @status
+            ORDER BY p.[CreatedAt] DESC
+            OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY;
+            """;
+        AddParameter(cmd, "@status", (byte)NewsPollStatus.Published, DbType.Byte);
+        AddParameter(cmd, "@offset", (page - 1) * pageSize);
+        AddParameter(cmd, "@pageSize", pageSize);
+
+        var list = new List<NewsPollSummaryDto>();
+        await using var reader = await cmd.ExecuteReaderAsync(ct);
+        while (await reader.ReadAsync(ct))
+        {
+            var rawStatus = (NewsPollStatus)reader.GetByte(reader.GetOrdinal("Status"));
+            var closesAt = reader.IsDBNull(reader.GetOrdinal("ClosesAt"))
+                ? (DateTime?)null
+                : reader.GetDateTime(reader.GetOrdinal("ClosesAt"));
+
+            list.Add(new NewsPollSummaryDto(
+                reader.GetInt32(reader.GetOrdinal("Id")),
+                reader.GetString(reader.GetOrdinal("Slug")),
+                reader.GetString(reader.GetOrdinal("Title")),
+                reader.GetString(reader.GetOrdinal("Question")),
+                reader.IsDBNull(reader.GetOrdinal("Description")) ? null : reader.GetString(reader.GetOrdinal("Description")),
+                NewsPollMediaPath.ToPublicPath(reader.IsDBNull(reader.GetOrdinal("CoverImageUrl"))
+                    ? null
+                    : reader.GetString(reader.GetOrdinal("CoverImageUrl"))),
+                ToStatusLabel(rawStatus, closesAt),
+                reader.GetBoolean(reader.GetOrdinal("AllowMultipleAnswers")),
+                reader.GetBoolean(reader.GetOrdinal("ShowResultsBeforeVoting")),
+                reader.GetInt32(reader.GetOrdinal("TotalVotes")),
+                reader.GetDateTime(reader.GetOrdinal("CreatedAt")),
+                closesAt));
         }
 
         return list;
