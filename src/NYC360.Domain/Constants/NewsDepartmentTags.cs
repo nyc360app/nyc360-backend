@@ -58,6 +58,27 @@ public static class NewsDepartmentTags
         PublisherBadgeName
     };
 
+    public static string? GetBadgeCode(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return null;
+
+        var trimmed = name.Trim();
+        if (trimmed.StartsWith("D08.", StringComparison.OrdinalIgnoreCase))
+        {
+            var spaceIndex = trimmed.IndexOf(' ');
+            return spaceIndex > 0 ? trimmed[..spaceIndex] : trimmed;
+        }
+
+        if (trimmed.Equals(VerifiedPublisherName, StringComparison.OrdinalIgnoreCase))
+            return "VerifiedPublisher";
+
+        if (trimmed.Equals(ProbationaryPublisherName, StringComparison.OrdinalIgnoreCase))
+            return "ProbationaryPublisher";
+
+        return null;
+    }
+
     public static bool TryGetName(int tagId, out string? name)
     {
         name = tagId switch

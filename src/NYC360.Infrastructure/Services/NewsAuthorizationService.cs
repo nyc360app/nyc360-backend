@@ -39,13 +39,16 @@ public class NewsAuthorizationService(IUserRepository userRepository) : INewsAut
         var canPublishContent = isStaff || tagNames.Overlaps(NewsDepartmentTags.DirectPublishingNames);
         var canConnectRss = canPublishContent;
         var canReviewRssRequests = canModerateContent;
-        var canListNewsOrganizationInSpace = isStaff
+        var canListNewsLocationsInSpace = canSubmitContent;
+        var canListNewsOrganizationsInSpace = isStaff
             || (profile.User.Type == UserType.Organization && tagNames.Contains(NewsDepartmentTags.ListNewsOrganizationInSpaceName));
-        var grantedKeys = BuildGrantedKeys(isStaff, canSubmitContent, canListNewsOrganizationInSpace, tagNames);
+        var grantedKeys = BuildGrantedKeys(isStaff, canSubmitContent, canListNewsOrganizationsInSpace, tagNames);
         var grantedNewsTagDtos = BuildGrantedNewsTags(
             grantedNewsTags,
             isStaff,
-            canListNewsOrganizationInSpace);
+            canListNewsOrganizationsInSpace);
+        var grantedBadges = BuildGrantedBadges(grantedNewsTagDtos);
+        var trustState = ResolveTrustState(isStaff, tagNames);
 
         return new NewsAccessDto(
             isStaff,
@@ -55,7 +58,11 @@ public class NewsAuthorizationService(IUserRepository userRepository) : INewsAut
             canPublishContent,
             canConnectRss,
             canReviewRssRequests,
-            canListNewsOrganizationInSpace,
+            canListNewsLocationsInSpace,
+            canListNewsOrganizationsInSpace,
+            canListNewsOrganizationsInSpace,
+            trustState,
+            grantedBadges,
             grantedKeys,
             grantedNewsTagDtos
         );
@@ -141,6 +148,32 @@ public class NewsAuthorizationService(IUserRepository userRepository) : INewsAut
         }
 
         return effectiveTags.Values.OrderBy(tag => tag.Id).ToList();
+    }
+
+    private static List<NewsBadgeDto> BuildGrantedBadges(List<TagDto> grantedTags)
+    {
+        var badges = new List<NewsBadgeDto>();
+        foreach (var tag in grantedTags)
+        {
+            var code = NewsDepartmentTags.GetBadgeCode(tag.Name);
+            if (string.IsNullOrWhiteSpace(code))
+                continue;
+
+            badges.Add(new NewsBadgeDto(tag.Id, code, tag.Name));
+        }
+
+        return badges;
+    }
+
+    private static string ResolveTrustState(bool isStaff, HashSet<string> tagNames)
+    {
+        if (isStaff || tagNames.Contains(NewsDepartmentTags.VerifiedPublisherName))
+            return "VerifiedPublisher";
+
+        if (tagNames.Contains(NewsDepartmentTags.ProbationaryPublisherName))
+            return "ProbationaryPublisher";
+
+        return "UnverifiedContributor";
     }
 
     private static void AddSyntheticTag(Dictionary<int, TagDto> effectiveTags, int id, string name)
