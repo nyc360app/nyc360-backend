@@ -12,14 +12,17 @@ public class RssFeedConnectionRequest
     public string? Description { get; set; }
     public string? ImageUrl { get; set; }
     public string? LogoImageUrl { get; set; }
+    public string? LogoFileName { get; set; }
     public string? Language { get; set; }
     public string? SourceWebsite { get; set; }
     public string? SourceCredibility { get; set; }
     public bool AgreementAccepted { get; set; }
     public string? DivisionTag { get; set; }
+    public Category? FinalCategory { get; set; }
     
     public RssConnectionStatus Status { get; set; } = RssConnectionStatus.Pending;
     public string? AdminNote { get; set; }
+    public int? ProcessedByUserId { get; set; }
     
     public int RequesterId { get; set; }
     public UserProfile? Requester { get; set; }

@@ -20,8 +20,13 @@ public class RssFeedConnectionRequestUpdateCommandHandler(
         if (entity.Status != RssConnectionStatus.Pending)
              return StandardResponse.Failure(new ApiError("rss_request.processed", "Request has already been processed."));
 
+        if (request.Status == RssConnectionStatus.Pending)
+            return StandardResponse.Failure(new ApiError("rss_request.invalid_status", "Status must be Approved or Rejected."));
+
         entity.Status = request.Status;
         entity.AdminNote = request.AdminNote;
+        entity.FinalCategory = request.Category ?? entity.FinalCategory;
+        entity.ProcessedByUserId = request.ProcessedByUserId;
         entity.ProcessedAt = DateTime.UtcNow;
 
         if (request.Status == RssConnectionStatus.Approved)
@@ -38,11 +43,12 @@ public class RssFeedConnectionRequestUpdateCommandHandler(
             {
                 Name = entity.Name,
                 RssUrl = entity.Url,
-                Category = entity.Category,
+                Category = entity.FinalCategory ?? entity.Category,
                 Description = entity.Description,
                 ImageUrl = entity.LogoImageUrl ?? entity.ImageUrl,
                 IsActive = true,
-                LastChecked = DateTime.UtcNow
+                LastChecked = DateTime.UtcNow,
+                LastCheckedAt = DateTime.UtcNow
             };
             
             await rssSourceRepo.AddAsync(newSource, cancellationToken);

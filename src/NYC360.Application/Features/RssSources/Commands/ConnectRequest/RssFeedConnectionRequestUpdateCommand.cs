@@ -7,4 +7,6 @@ namespace NYC360.Application.Features.RssSources.Commands.ConnectRequest;
 public record RssFeedConnectionRequestUpdateCommand(
     int RequestId, 
     RssConnectionStatus Status,
-    string? AdminNote) : IRequest<StandardResponse>;
+    string? AdminNote,
+    Category? Category,
+    int ProcessedByUserId) : IRequest<StandardResponse>;

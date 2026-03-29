@@ -36,6 +36,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     // Rss Feeds
     public DbSet<RssFeedSource> RssFeedSources { get; set; }
     public DbSet<RssFeedConnectionRequest> RssFeedConnectionRequests { get; set; }
+    public DbSet<RssFeedItem> RssFeedItems { get; set; }
     
     // Location
     public DbSet<Location> Locations { get; set; }

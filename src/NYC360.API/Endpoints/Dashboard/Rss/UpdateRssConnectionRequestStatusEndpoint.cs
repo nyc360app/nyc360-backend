@@ -1,6 +1,7 @@
 using NYC360.Domain.Enums;
 using FastEndpoints;
 using MediatR;
+using NYC360.API.Extensions;
 using NYC360.Application.Features.RssSources.Commands.ConnectRequest;
 using NYC360.Domain.Wrappers;
 using NYC360.API.Models.RssSources;
@@ -17,10 +18,19 @@ public class UpdateRssConnectionRequestStatusEndpoint(IMediator mediator) : Endp
     
     public override async Task HandleAsync(UpdateRssConnectionRequestStatusRequest request, CancellationToken ct)
     {
+        var userId = User.GetId();
+        if (userId == null)
+        {
+            await Send.UnauthorizedAsync(ct);
+            return;
+        }
+
         var command = new RssFeedConnectionRequestUpdateCommand(
             request.Id,
             request.Status,
-            request.AdminNote);
+            request.AdminNote,
+            request.Category,
+            userId.Value);
             
         var result = await mediator.Send(command, ct);
         await Send.OkAsync(result, ct);

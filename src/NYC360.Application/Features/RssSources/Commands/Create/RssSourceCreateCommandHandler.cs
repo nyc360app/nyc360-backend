@@ -35,7 +35,9 @@ public class RssSourceCreateCommandHandler(
             Category = request.Category,
             Description = normalizedDescription,
             ImageUrl = imageUrl,
-            IsActive = true
+            IsActive = true,
+            LastChecked = DateTime.UtcNow,
+            LastCheckedAt = DateTime.UtcNow
         };
 
         await rssSourceRepo.AddAsync(entity, cancellationToken);

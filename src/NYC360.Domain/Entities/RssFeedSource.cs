@@ -12,4 +12,7 @@ public class RssFeedSource
     public string? ImageUrl { get; set; }
     public bool IsActive { get; set; }
     public DateTime LastChecked { get; set; }
+    public DateTime? LastCheckedAt { get; set; }
+    public DateTime? LastSuccessAt { get; set; }
+    public string? LastError { get; set; }
 }

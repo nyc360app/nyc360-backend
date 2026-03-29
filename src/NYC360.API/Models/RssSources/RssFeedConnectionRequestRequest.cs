@@ -9,9 +9,11 @@ public record RssFeedConnectionRequestRequest(
     string Name, 
     string? Description, 
     string? ImageUrl,
+    IFormFile? Image,
     string? Language,
     string? SourceWebsite,
     string? SourceCredibility,
     bool AgreementAccepted,
     string? DivisionTag,
-    IFormFile? LogoImage);
+    IFormFile? LogoImage,
+    string? LogoFileName);

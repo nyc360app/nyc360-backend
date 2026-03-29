@@ -44,6 +44,15 @@ public class RssFeedConnectionRequestCreateCommandValidator : AbstractValidator<
             .Must(BeValidImage!)
             .When(x => x.LogoImage != null)
             .WithMessage("Logo image must be JPEG, PNG, or WebP and <= 5MB.");
+
+        RuleFor(x => x.Image)
+            .Must(BeValidImage!)
+            .When(x => x.Image != null)
+            .WithMessage("Image must be JPEG, PNG, or WebP and <= 5MB.");
+
+        RuleFor(x => x.LogoFileName)
+            .MaximumLength(255).WithMessage("Logo filename is too long.")
+            .When(x => !string.IsNullOrWhiteSpace(x.LogoFileName));
     }
 
     private bool BeAValidUrl(string url)

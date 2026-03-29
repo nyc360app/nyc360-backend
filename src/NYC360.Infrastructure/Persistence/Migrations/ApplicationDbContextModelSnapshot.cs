@@ -1814,10 +1814,16 @@ namespace NYC360.Infrastructure.Persistence.Migrations
                     b.Property<string>("DivisionTag")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<byte?>("FinalCategory")
+                        .HasColumnType("tinyint");
+
                     b.Property<string>("ImageUrl")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Language")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LogoFileName")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("LogoImageUrl")
@@ -1829,6 +1835,9 @@ namespace NYC360.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime?>("ProcessedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<int?>("ProcessedByUserId")
+                        .HasColumnType("int");
 
                     b.Property<int>("RequesterId")
                         .HasColumnType("int");
@@ -1876,6 +1885,15 @@ namespace NYC360.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("LastChecked")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("LastCheckedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("LastError")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("LastSuccessAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
@@ -1885,6 +1903,79 @@ namespace NYC360.Infrastructure.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("RssFeedSources");
+                });
+
+            modelBuilder.Entity("NYC360.Domain.Entities.RssFeedItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<byte>("Category")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTime>("FetchedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Guid")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Link")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("LinkHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<DateTime>("PublishedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RawMetadataJson")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<int>("SourceId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Summary")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Category", "PublishedAt");
+
+                    b.HasIndex("SourceId", "Guid")
+                        .IsUnique()
+                        .HasFilter("[Guid] IS NOT NULL");
+
+                    b.HasIndex("SourceId", "LinkHash")
+                        .IsUnique();
+
+                    b.HasIndex("SourceId", "PublishedAt");
+
+                    b.ToTable("RssFeedItems");
                 });
 
             modelBuilder.Entity("NYC360.Domain.Entities.Support.SupportTicket", b =>
@@ -3602,6 +3693,15 @@ namespace NYC360.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Requester");
+                });
+
+            modelBuilder.Entity("NYC360.Domain.Entities.RssFeedItem", b =>
+                {
+                    b.HasOne("NYC360.Domain.Entities.RssFeedSource", null)
+                        .WithMany()
+                        .HasForeignKey("SourceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("NYC360.Domain.Entities.Support.SupportTicket", b =>

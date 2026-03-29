@@ -35,7 +35,7 @@ public class ReviewNewsRssRequestEndpoint(
         }
 
         var result = await mediator.Send(
-            new RssFeedConnectionRequestUpdateCommand(req.Id, req.Status, req.AdminNote), ct);
+            new RssFeedConnectionRequestUpdateCommand(req.Id, req.Status, req.AdminNote, req.Category, userId.Value), ct);
 
         await Send.OkAsync(result, ct);
     }

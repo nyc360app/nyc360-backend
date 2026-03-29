@@ -17,6 +17,9 @@ public static class RssSourceDtoExtension
                 feed.Description,
                 feed.ImageUrl,
                 null,
+                null,
+                null,
+                null,
                 null
             );
         }

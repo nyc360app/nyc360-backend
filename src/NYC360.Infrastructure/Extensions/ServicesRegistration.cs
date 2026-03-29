@@ -24,6 +24,7 @@ public static class ServicesRegistration
         services.AddScoped<IUserClaimsGenerator, UserClaimsGenerator>();
         services.AddScoped<IJwtGenerator, JwtGenerator>();
         services.AddScoped<IOauthGoogleService, OauthGoogleService>();
+        services.AddScoped<IRssFetchClient, CodeHollowRssFetchClient>();
         services.AddScoped<IRssFeedService, RssFeedService>();
         services.AddScoped<ICommunityPermissionService, CommunityPermissionService>();
         services.AddScoped<INewsAuthorizationService, NewsAuthorizationService>();

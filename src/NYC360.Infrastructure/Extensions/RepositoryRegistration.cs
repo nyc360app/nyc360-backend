@@ -18,6 +18,7 @@ public static class RepositoryRegistration
         
         services.AddScoped<IRssSourceRepository, RssSourceRepository>();
         services.AddScoped<IRssFeedConnectionRequestRepository, RssFeedConnectionRequestRepository>();
+        services.AddScoped<IRssFeedItemRepository, RssFeedItemRepository>();
         
         services.AddScoped<IPostRepository, PostRepository>();
         services.AddScoped<ITopicRepository, TopicRepository>();

@@ -29,16 +29,18 @@ public class CreateNewsRssConnectionRequestEndpoint(IMediator mediator)
         var result = await mediator.Send(
             new RssFeedConnectionRequestCreateCommand(
                 req.Url,
-                Category.News,
+                req.Category ?? Category.News,
                 req.Name,
                 req.Description,
                 req.ImageUrl,
+                req.Image,
                 req.Language,
                 req.SourceWebsite,
                 req.SourceCredibility,
                 req.AgreementAccepted,
                 req.DivisionTag,
                 req.LogoImage,
+                req.LogoFileName,
                 userId.Value),
             ct);
 

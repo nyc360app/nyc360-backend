@@ -5,4 +5,5 @@ namespace NYC360.API.Models.RssSources;
 public record UpdateRssConnectionRequestStatusRequest(
     int Id,
     RssConnectionStatus Status,
-    string? AdminNote);
+    string? AdminNote,
+    Category? Category = null);

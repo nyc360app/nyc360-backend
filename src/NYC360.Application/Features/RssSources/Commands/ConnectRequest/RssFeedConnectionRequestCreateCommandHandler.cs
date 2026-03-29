@@ -1,4 +1,5 @@
 using NYC360.Application.Contracts.Persistence;
+using NYC360.Application.Contracts.Rss;
 using NYC360.Application.Contracts.Services;
 using NYC360.Application.Contracts.Storage;
 using NYC360.Domain.Constants;
@@ -12,6 +13,7 @@ namespace NYC360.Application.Features.RssSources.Commands.ConnectRequest;
 public class RssFeedConnectionRequestCreateCommandHandler(
     IRssFeedConnectionRequestRepository requestRepo,
     IRssSourceRepository rssSourceRepo,
+    IRssFeedService rssFeedService,
     INewsAuthorizationService newsAuthorizationService,
     IUserRepository userRepository,
     ITagRepository tagRepository,
@@ -28,9 +30,8 @@ public class RssFeedConnectionRequestCreateCommandHandler(
         var normalizedSourceWebsite = string.IsNullOrWhiteSpace(request.SourceWebsite) ? null : request.SourceWebsite.Trim();
         var normalizedSourceCredibility = string.IsNullOrWhiteSpace(request.SourceCredibility) ? null : request.SourceCredibility.Trim();
         var normalizedDivisionTag = string.IsNullOrWhiteSpace(request.DivisionTag) ? null : request.DivisionTag.Trim();
-        var logoImageUrl = request.LogoImage is not null
-            ? await localStorageService.SaveFileAsync(request.LogoImage, "rss-connect-logos", cancellationToken)
-            : null;
+        var normalizedLogoFileName = string.IsNullOrWhiteSpace(request.LogoFileName) ? null : request.LogoFileName.Trim();
+        var logoImage = request.LogoImage ?? request.Image;
 
         if (request.Category == Category.News)
         {
@@ -73,6 +74,22 @@ public class RssFeedConnectionRequestCreateCommandHandler(
         var hasPendingRequest = await requestRepo.HasPendingRequestAsync(normalizedUrl, request.Category, cancellationToken);
         if (hasPendingRequest)
             return StandardResponse.Failure(new ApiError("rss.request_pending", "A pending connection request already exists for this RSS URL."));
+
+        try
+        {
+            var rssMetadata = await rssFeedService.FetchSourceDataAsync(normalizedUrl, cancellationToken);
+            if (rssMetadata is null)
+                return StandardResponse.Failure(new ApiError("rss.invalid_feed", "URL is not a reachable RSS/Atom feed."));
+        }
+        catch
+        {
+            return StandardResponse.Failure(new ApiError("rss.invalid_feed", "URL is not a reachable RSS/Atom feed."));
+        }
+
+        var logoImageUrl = logoImage is not null
+            ? await localStorageService.SaveFileAsync(logoImage, "rss-connect-logos", cancellationToken)
+            : null;
+        var logoFileName = normalizedLogoFileName ?? logoImage?.FileName;
         
         var entity = new RssFeedConnectionRequest
         {
@@ -82,6 +99,7 @@ public class RssFeedConnectionRequestCreateCommandHandler(
             Description = normalizedDescription,
             ImageUrl = normalizedImageUrl,
             LogoImageUrl = logoImageUrl,
+            LogoFileName = logoFileName,
             Language = normalizedLanguage,
             SourceWebsite = normalizedSourceWebsite,
             SourceCredibility = normalizedSourceCredibility,

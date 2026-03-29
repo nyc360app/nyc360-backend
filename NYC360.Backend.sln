@@ -8,6 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NYC360.Infrastructure", "sr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NYC360.API", "src\NYC360.API\NYC360.API.csproj", "{4CC58875-7F66-4C17-B582-572136D06A12}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NYC360.Application.Tests", "tests\NYC360.Application.Tests\NYC360.Application.Tests.csproj", "{F3500DA4-1AC8-4191-9518-6FB5E6E93CAD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{4CC58875-7F66-4C17-B582-572136D06A12}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4CC58875-7F66-4C17-B582-572136D06A12}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4CC58875-7F66-4C17-B582-572136D06A12}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F3500DA4-1AC8-4191-9518-6FB5E6E93CAD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F3500DA4-1AC8-4191-9518-6FB5E6E93CAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F3500DA4-1AC8-4191-9518-6FB5E6E93CAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F3500DA4-1AC8-4191-9518-6FB5E6E93CAD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

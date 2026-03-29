@@ -11,7 +11,10 @@ public record RssSourceDto(
     string? Description,
     string? ImageUrl,
     bool? IsActive,
-    DateTime? LastChecked
+    DateTime? LastChecked,
+    DateTime? LastCheckedAt,
+    DateTime? LastSuccessAt,
+    string? LastError
 );
 
 public static class RssSourceDtoExtensions
@@ -28,7 +31,10 @@ public static class RssSourceDtoExtensions
                 source.Description,
                 source.ImageUrl,
                 source.IsActive,
-                source.LastChecked
+                source.LastChecked,
+                source.LastCheckedAt,
+                source.LastSuccessAt,
+                source.LastError
             );
         }
     }
