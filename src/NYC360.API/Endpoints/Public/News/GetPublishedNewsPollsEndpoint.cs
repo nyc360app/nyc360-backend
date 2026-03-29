@@ -1,4 +1,5 @@
 using FastEndpoints;
+using NYC360.API.Extensions;
 using NYC360.API.Models.News;
 using NYC360.Application.Contracts.Services;
 using NYC360.Domain.Dtos.News;
