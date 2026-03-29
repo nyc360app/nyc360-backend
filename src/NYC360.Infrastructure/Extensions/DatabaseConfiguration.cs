@@ -2,6 +2,7 @@ using NYC360.Infrastructure.Persistence.DbContexts;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace NYC360.Infrastructure.Extensions;
 
@@ -11,6 +12,7 @@ public static class DatabaseConfiguration
     {
         services.AddDbContext<ApplicationDbContext>(options =>
             //options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
-            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"))
+                .ConfigureWarnings(w => w.Ignore(RelationalEventId.PendingModelChangesWarning)));
     }
 }
