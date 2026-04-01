@@ -27,7 +27,8 @@ public record PostDto(
     bool IsSavedByUser,
     InteractionType? CurrentUserInteraction,
     object? LinkedResource,
-    TopicDto? Topic
+    TopicDto? Topic,
+    bool IsFeatured
 );
 
 // Mapping
@@ -70,7 +71,8 @@ public static class PostDtoExtensions
                     Id = post.Topic.Id, 
                     Name = post.Topic.Name, 
                     Category = post.Topic.Category 
-                } : null
+                } : null,
+                post.IsFeatured
             );
         }
     }

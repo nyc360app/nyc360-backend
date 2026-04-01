@@ -239,14 +239,52 @@ public sealed class PostRepository(ApplicationDbContext db) : IPostRepository
     
     public async Task<List<PostDto>> GetFeaturedPostsAsync(int? userId, int count, CancellationToken ct)
     {
-        // 1. Start with the raw Entity query
-        var query = db.Posts
+        var featuredQuery = db.Posts
             .AsNoTracking()
             .Where(p => p.IsApproved)
-            .OrderByDescending(p => p.CreatedAt); // 2. Sort BEFORE projecting
+            .Where(p => p.IsFeatured)
+            .OrderByDescending(p => p.FeaturedAt ?? p.CreatedAt)
+            .ThenByDescending(p => p.CreatedAt)
+            .Take(count);
 
-        // 3. Project to DTO last
-        return await ProjectToPostDto(query.Take(count), userId).ToListAsync(ct);
+        var featured = await ProjectToPostDto(featuredQuery, userId).ToListAsync(ct);
+        if (featured.Count >= count)
+            return featured;
+
+        var remaining = count - featured.Count;
+        var excludedIds = featured.Select(p => p.Id).ToList();
+        var oneMonthAgo = DateTime.UtcNow.AddDays(-30);
+
+        var engagingFallbackQuery = db.Posts
+            .AsNoTracking()
+            .Where(p => p.IsApproved)
+            .Where(p => !excludedIds.Contains(p.Id))
+            .Where(p => p.CreatedAt >= oneMonthAgo)
+            .OrderByDescending(p =>
+                ((p.Stats != null ? p.Stats.Likes : 0) * 5) +
+                ((p.Stats != null ? p.Stats.Comments : 0) * 3) +
+                ((p.Stats != null ? p.Stats.Shares : 0) * 2))
+            .ThenByDescending(p => p.CreatedAt)
+            .Take(remaining);
+
+        var engagingFallback = await ProjectToPostDto(engagingFallbackQuery, userId).ToListAsync(ct);
+        featured.AddRange(engagingFallback);
+
+        if (featured.Count >= count)
+            return featured;
+
+        var latestExcludedIds = featured.Select(f => f.Id).ToList();
+        var latestFallbackQuery = db.Posts
+            .AsNoTracking()
+            .Where(p => p.IsApproved)
+            .Where(p => !latestExcludedIds.Contains(p.Id))
+            .OrderByDescending(p => p.CreatedAt)
+            .Take(count - featured.Count);
+
+        var latestFallback = await ProjectToPostDto(latestFallbackQuery, userId).ToListAsync(ct);
+        featured.AddRange(latestFallback);
+
+        return featured;
     }
 
     public async Task<List<InterestGroupDto>> GetGroupedInterestPostsAsync(int? userId, List<Category> categories, int postsPerCategory, List<int> excludeIds, CancellationToken ct)
@@ -330,25 +368,39 @@ public sealed class PostRepository(ApplicationDbContext db) : IPostRepository
     public async Task<List<PostDto>> GetFeaturedPostsAsync(Category? division, int? userId, int limit, CancellationToken ct)
     {
         var oneMonthAgo = DateTime.UtcNow.AddDays(-30);
-
-        var query = db.Posts
+        
+        var featuredQuery = db.Posts
             .AsNoTracking()
             .Where(p => p.IsApproved)
+            .Where(p => p.IsFeatured)
+            .Where(p => !division.HasValue || p.Category == division)
+            .OrderByDescending(p => p.FeaturedAt ?? p.CreatedAt)
+            .ThenByDescending(p => p.CreatedAt)
+            .Take(limit);
+
+        var featured = await ProjectToPostDto(featuredQuery, userId).ToListAsync(ct);
+        if (featured.Count >= limit)
+            return featured;
+
+        var remaining = limit - featured.Count;
+        var excludedIds = featured.Select(p => p.Id).ToList();
+
+        var engagingFallbackQuery = db.Posts
+            .AsNoTracking()
+            .Where(p => p.IsApproved)
+            .Where(p => !excludedIds.Contains(p.Id))
             .Where(p => !division.HasValue || p.Category == division)
             .Where(p => p.CreatedAt >= oneMonthAgo)
-            // FEATURED LOGIC: 
-            // 1. Give a massive boost to posts explicitly marked 'IsFeatured' (Future update)
-            // 2. Add weighted engagement (Likes/Comments/Shares)
-            // 3. Subtract 'Age' factor (newer posts score higher)
             .OrderByDescending(p => 
-                //(p.IsFeatured ? 1000 : 0) +  // Todo in the future, consider adding a "Featured" flag to the DB
                 ((p.Stats != null ? p.Stats.Likes : 0) * 5) + 
                 ((p.Stats != null ? p.Stats.Comments : 0) * 3) + 
                 ((p.Stats != null ? p.Stats.Shares : 0) * 2))
             .ThenByDescending(p => p.CreatedAt)
-            .Take(limit);
+            .Take(remaining);
 
-        return await ProjectToPostDto(query, userId).ToListAsync(ct);
+        var engagingFallback = await ProjectToPostDto(engagingFallbackQuery, userId).ToListAsync(ct);
+        featured.AddRange(engagingFallback);
+        return featured;
     }
 
     public async Task<List<PostDto>> GetTrendingPostsAsync(Category? division, int? userId, int limit, CancellationToken ct)
@@ -756,7 +808,8 @@ public sealed class PostRepository(ApplicationDbContext db) : IPostRepository
                        false, // isSaved (usually not needed for nested parent)
                         null,  // interaction (usually not needed for nested parent)
                         null,  // nested linked resource
-                        null   // nested topic
+                        null,  // nested topic
+                        post.ParentPost.IsFeatured
                     ) : null,
 
                    // --- MAIN ATTACHMENTS ---
@@ -813,7 +866,8 @@ public sealed class PostRepository(ApplicationDbContext db) : IPostRepository
                        Id = post.Topic.Id,
                        Name = post.Topic.Name,
                        Category = post.Topic.Category
-                   } : null
+                   } : null,
+                   post.IsFeatured
                );
     }
     

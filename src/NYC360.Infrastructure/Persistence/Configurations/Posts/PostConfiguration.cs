@@ -37,6 +37,10 @@ public class PostConfiguration : IEntityTypeConfiguration<Post>
 
         builder.Property(p => p.ModerationNote)
             .HasMaxLength(1000);
+        
+        builder.Property(p => p.IsFeatured)
+            .HasDefaultValue(false)
+            .IsRequired();
 
         // Post → PostStats (1:1)
         builder.HasOne(p => p.Stats)

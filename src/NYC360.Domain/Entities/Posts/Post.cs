@@ -32,6 +32,9 @@ public class Post
     public string? ModerationNote { get; set; }
     public DateTime? ModeratedAt { get; set; }
     public int? ModeratedByUserId { get; set; }
+    public bool IsFeatured { get; set; } = false;
+    public DateTime? FeaturedAt { get; set; }
+    public int? FeaturedByUserId { get; set; }
     
     // Date
     public DateTime CreatedAt { get; set; }
