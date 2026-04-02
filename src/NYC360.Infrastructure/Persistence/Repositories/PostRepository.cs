@@ -420,6 +420,37 @@ public sealed class PostRepository(ApplicationDbContext db) : IPostRepository
 
         return await ProjectToPostDto(query, userId).ToListAsync(ct);
     }
+
+    public async Task<List<PostDto>> GetFeaturedNewsFeedAsync(int? userId, int pageSize, int page, DateTime? cursorTime, int? cursorId, int take, CancellationToken ct)
+    {
+        var baseQuery = db.Posts
+            .AsNoTracking()
+            .Where(p => p.IsApproved)
+            .Where(p => p.IsFeatured)
+            .Where(p => p.Category == Category.News);
+
+        if (cursorTime.HasValue && cursorId.HasValue)
+        {
+            var time = cursorTime.Value;
+            var id = cursorId.Value;
+            baseQuery = baseQuery.Where(p =>
+                (p.FeaturedAt ?? p.CreatedAt) < time ||
+                ((p.FeaturedAt ?? p.CreatedAt) == time && p.Id < id));
+        }
+
+        var orderedQuery = baseQuery
+            .OrderByDescending(p => p.FeaturedAt ?? p.CreatedAt)
+            .ThenByDescending(p => p.Id);
+
+        if (!cursorTime.HasValue || !cursorId.HasValue)
+        {
+            var skip = Math.Max(0, (page - 1) * pageSize);
+            orderedQuery = orderedQuery.Skip(skip);
+        }
+
+        orderedQuery = orderedQuery.Take(take);
+        return await ProjectToPostDto(orderedQuery, userId).ToListAsync(ct);
+    }
     public async Task<List<string>> GetTrendingTagsAsync(int count, CancellationToken ct)
     {
         return await db.Posts
@@ -788,6 +819,7 @@ public sealed class PostRepository(ApplicationDbContext db) : IPostRepository
 
                        post.ParentPost.CreatedAt,
                        post.ParentPost.LastUpdated,
+                       post.ParentPost.FeaturedAt,
 
                        // Parent Author Mapping
                        post.ParentPost.SourceId != null && post.ParentPost.Source != null 
@@ -826,6 +858,7 @@ public sealed class PostRepository(ApplicationDbContext db) : IPostRepository
 
                    post.CreatedAt,
                    post.LastUpdated,
+                   post.FeaturedAt,
 
                    // --- MAIN AUTHOR ---
                    post.SourceId != null && post.Source != null 

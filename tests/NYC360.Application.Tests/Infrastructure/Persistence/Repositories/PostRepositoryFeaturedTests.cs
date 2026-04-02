@@ -90,4 +90,75 @@ public class PostRepositoryFeaturedTests
         Assert.Equal(3, result[2].Id);
         Assert.All(result.Take(2), post => Assert.True(post.IsFeatured));
     }
+
+    [Fact]
+    public async Task GetFeaturedNewsFeedAsync_UsesCursorToAvoidRepeats()
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase($"post-featured-cursor-{Guid.NewGuid()}")
+            .Options;
+
+        await using var dbContext = new ApplicationDbContext(options);
+
+        var featuredA = new Post
+        {
+            Id = 10,
+            Title = "Featured A",
+            Content = "Content A",
+            Category = Category.News,
+            PostType = PostType.News,
+            SourceType = PostSource.User,
+            IsApproved = true,
+            IsFeatured = true,
+            FeaturedAt = new DateTime(2026, 4, 3, 10, 0, 0, DateTimeKind.Utc),
+            CreatedAt = new DateTime(2026, 3, 20, 0, 0, 0, DateTimeKind.Utc),
+            LastUpdated = DateTime.UtcNow
+        };
+
+        var featuredB = new Post
+        {
+            Id = 9,
+            Title = "Featured B",
+            Content = "Content B",
+            Category = Category.News,
+            PostType = PostType.News,
+            SourceType = PostSource.User,
+            IsApproved = true,
+            IsFeatured = true,
+            FeaturedAt = new DateTime(2026, 4, 2, 10, 0, 0, DateTimeKind.Utc),
+            CreatedAt = new DateTime(2026, 3, 19, 0, 0, 0, DateTimeKind.Utc),
+            LastUpdated = DateTime.UtcNow
+        };
+
+        var featuredC = new Post
+        {
+            Id = 8,
+            Title = "Featured C",
+            Content = "Content C",
+            Category = Category.News,
+            PostType = PostType.News,
+            SourceType = PostSource.User,
+            IsApproved = true,
+            IsFeatured = true,
+            FeaturedAt = new DateTime(2026, 4, 1, 10, 0, 0, DateTimeKind.Utc),
+            CreatedAt = new DateTime(2026, 3, 18, 0, 0, 0, DateTimeKind.Utc),
+            LastUpdated = DateTime.UtcNow
+        };
+
+        dbContext.Posts.AddRange(featuredA, featuredB, featuredC);
+        await dbContext.SaveChangesAsync();
+
+        var repository = new PostRepository(dbContext);
+        var result = await repository.GetFeaturedNewsFeedAsync(
+            userId: null,
+            pageSize: 10,
+            page: 1,
+            cursorTime: featuredB.FeaturedAt,
+            cursorId: featuredB.Id,
+            take: 10,
+            CancellationToken.None);
+
+        Assert.Single(result);
+        Assert.Equal(featuredC.Id, result[0].Id);
+    }
 }
