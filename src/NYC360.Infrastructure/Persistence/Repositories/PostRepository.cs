@@ -421,13 +421,12 @@ public sealed class PostRepository(ApplicationDbContext db) : IPostRepository
         return await ProjectToPostDto(query, userId).ToListAsync(ct);
     }
 
-    public async Task<List<PostDto>> GetFeaturedNewsFeedAsync(int? userId, int pageSize, int page, DateTime? cursorTime, int? cursorId, int take, CancellationToken ct)
+    public async Task<List<PostDto>> GetFeaturedNewsSliceAsync(int? userId, DateTime? cursorTime, int? cursorId, int take, CancellationToken ct)
     {
         var baseQuery = db.Posts
             .AsNoTracking()
             .Where(p => p.IsApproved)
-            .Where(p => p.IsFeatured)
-            .Where(p => p.Category == Category.News);
+            .Where(p => p.IsFeatured);
 
         if (cursorTime.HasValue && cursorId.HasValue)
         {
@@ -442,11 +441,42 @@ public sealed class PostRepository(ApplicationDbContext db) : IPostRepository
             .OrderByDescending(p => p.FeaturedAt ?? p.CreatedAt)
             .ThenByDescending(p => p.Id);
 
-        if (!cursorTime.HasValue || !cursorId.HasValue)
+        orderedQuery = orderedQuery.Take(take);
+        return await ProjectToPostDto(orderedQuery, userId).ToListAsync(ct);
+    }
+
+    public async Task<List<PostDto>> GetEngagingNewsSliceAsync(int? userId, int? cursorScore, DateTime? cursorTime, int? cursorId, int take, CancellationToken ct)
+    {
+        var baseQuery = db.Posts
+            .AsNoTracking()
+            .Where(p => p.IsApproved)
+            .Where(p => !p.IsFeatured);
+
+        if (cursorScore.HasValue && cursorTime.HasValue && cursorId.HasValue)
         {
-            var skip = Math.Max(0, (page - 1) * pageSize);
-            orderedQuery = orderedQuery.Skip(skip);
+            var score = cursorScore.Value;
+            var time = cursorTime.Value;
+            var id = cursorId.Value;
+
+            baseQuery = baseQuery.Where(p =>
+                ((p.Stats != null ? p.Stats.Likes : 0) * 5 +
+                 (p.Stats != null ? p.Stats.Comments : 0) * 3 +
+                 (p.Stats != null ? p.Stats.Shares : 0) * 2) < score
+                || (
+                    ((p.Stats != null ? p.Stats.Likes : 0) * 5 +
+                     (p.Stats != null ? p.Stats.Comments : 0) * 3 +
+                     (p.Stats != null ? p.Stats.Shares : 0) * 2) == score
+                    && (p.CreatedAt < time || (p.CreatedAt == time && p.Id < id))
+                ));
         }
+
+        IQueryable<Post> orderedQuery = baseQuery
+            .OrderByDescending(p =>
+                ((p.Stats != null ? p.Stats.Likes : 0) * 5) +
+                ((p.Stats != null ? p.Stats.Comments : 0) * 3) +
+                ((p.Stats != null ? p.Stats.Shares : 0) * 2))
+            .ThenByDescending(p => p.CreatedAt)
+            .ThenByDescending(p => p.Id);
 
         orderedQuery = orderedQuery.Take(take);
         return await ProjectToPostDto(orderedQuery, userId).ToListAsync(ct);

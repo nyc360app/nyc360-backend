@@ -14,75 +14,168 @@ public class GetFeaturedNewsFeedQueryHandler(IPostRepository postRepository)
         var pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
         var page = request.Page <= 0 ? 1 : request.Page;
 
-        DateTime? cursorTime = null;
-        int? cursorId = null;
+        var take = pageSize + 1;
 
-        if (!string.IsNullOrWhiteSpace(request.Cursor))
+        var cursor = ParseCursor(request.Cursor);
+        if (cursor.IsInvalid)
         {
-            if (!TryParseCursor(request.Cursor!, out cursorTime, out cursorId))
-            {
-                return StandardResponse<NewsFeaturedFeedDto>.Failure(
-                    new ApiError("news.featured.invalid_cursor", "Invalid cursor."));
-            }
+            return StandardResponse<NewsFeaturedFeedDto>.Failure(
+                new ApiError("news.featured.invalid_cursor", "Invalid cursor."));
         }
 
-        var take = pageSize + 1;
-        var items = await postRepository.GetFeaturedNewsFeedAsync(
+        if (cursor.Type == CursorType.Engaging)
+        {
+            var engaging = await postRepository.GetEngagingNewsSliceAsync(
+                request.UserId,
+                cursor.Score,
+                cursor.Time,
+                cursor.Id,
+                take,
+                ct);
+
+            var hasMore = engaging.Count > pageSize;
+            var trimmed = hasMore ? engaging.Take(pageSize).ToList() : engaging;
+            var nextCursor = BuildEngagingCursor(trimmed);
+
+            return StandardResponse<NewsFeaturedFeedDto>.Success(
+                new NewsFeaturedFeedDto(trimmed, nextCursor, hasMore));
+        }
+
+        var featured = await postRepository.GetFeaturedNewsSliceAsync(
             request.UserId,
-            pageSize,
-            page,
-            cursorTime,
-            cursorId,
+            cursor.Time,
+            cursor.Id,
             take,
             ct);
 
-        var hasMore = items.Count > pageSize;
-        var trimmed = hasMore ? items.Take(pageSize).ToList() : items;
+        var featuredHasMore = featured.Count > pageSize;
+        var featuredTrimmed = featuredHasMore ? featured.Take(pageSize).ToList() : featured;
 
-        var nextCursor = BuildNextCursor(trimmed);
+        if (featuredHasMore)
+        {
+            var nextCursor = BuildFeaturedCursor(featuredTrimmed);
+            return StandardResponse<NewsFeaturedFeedDto>.Success(
+                new NewsFeaturedFeedDto(featuredTrimmed, nextCursor, true));
+        }
 
+        var remaining = pageSize - featuredTrimmed.Count;
+        if (remaining <= 0)
+        {
+            var nextCursor = BuildFeaturedCursor(featuredTrimmed);
+            return StandardResponse<NewsFeaturedFeedDto>.Success(
+                new NewsFeaturedFeedDto(featuredTrimmed, nextCursor, false));
+        }
+
+        var engagingSlice = await postRepository.GetEngagingNewsSliceAsync(
+            request.UserId,
+            null,
+            null,
+            null,
+            remaining + 1,
+            ct);
+
+        var engagingHasMore = engagingSlice.Count > remaining;
+        var engagingTrimmed = engagingHasMore ? engagingSlice.Take(remaining).ToList() : engagingSlice;
+
+        var combined = new List<PostDto>(featuredTrimmed.Count + engagingTrimmed.Count);
+        combined.AddRange(featuredTrimmed);
+        combined.AddRange(engagingTrimmed);
+
+        var nextEngagingCursor = engagingTrimmed.Count > 0 ? BuildEngagingCursor(engagingTrimmed) : null;
         return StandardResponse<NewsFeaturedFeedDto>.Success(
-            new NewsFeaturedFeedDto(trimmed, nextCursor, hasMore));
+            new NewsFeaturedFeedDto(combined, nextEngagingCursor, engagingHasMore));
     }
 
-    private static string? BuildNextCursor(List<PostDto> items)
+    private static string? BuildFeaturedCursor(List<PostDto> items)
     {
         if (items.Count == 0)
             return null;
 
         var last = items[^1];
         var keyTime = last.FeaturedAt ?? last.CreatedAt;
-        var token = $"{keyTime.Ticks}|{last.Id}";
+        var token = $"F|{keyTime.Ticks}|{last.Id}";
         var bytes = System.Text.Encoding.UTF8.GetBytes(token);
         return Convert.ToBase64String(bytes);
     }
 
-    private static bool TryParseCursor(string cursor, out DateTime? cursorTime, out int? cursorId)
+    private static string? BuildEngagingCursor(List<PostDto> items)
     {
-        cursorTime = null;
-        cursorId = null;
+        if (items.Count == 0)
+            return null;
+
+        var last = items[^1];
+        var score = ComputeScore(last);
+        var token = $"E|{score}|{last.CreatedAt.Ticks}|{last.Id}";
+        var bytes = System.Text.Encoding.UTF8.GetBytes(token);
+        return Convert.ToBase64String(bytes);
+    }
+
+    private static int ComputeScore(PostDto post)
+    {
+        var stats = post.Stats;
+        if (stats is null)
+            return 0;
+
+        return (stats.Likes * 5) + (stats.Comments * 3) + (stats.Shares * 2);
+    }
+
+    private static CursorResult ParseCursor(string? cursor)
+    {
+        if (string.IsNullOrWhiteSpace(cursor))
+            return CursorResult.Empty();
 
         try
         {
-            var bytes = Convert.FromBase64String(cursor);
+            var bytes = Convert.FromBase64String(cursor!);
             var text = System.Text.Encoding.UTF8.GetString(bytes);
             var parts = text.Split('|');
-            if (parts.Length != 2)
-                return false;
 
-            if (!long.TryParse(parts[0], out var ticks))
-                return false;
+            if (parts.Length < 3)
+                return CursorResult.Invalid();
 
-            if (!int.TryParse(parts[1], out var id))
-                return false;
+            var typeToken = parts[0];
+            if (typeToken == "F" && parts.Length == 3)
+            {
+                if (!long.TryParse(parts[1], out var ticks) || !int.TryParse(parts[2], out var id))
+                    return CursorResult.Invalid();
 
-            cursorTime = new DateTime(ticks, DateTimeKind.Utc);
-            cursorId = id;
-            return true;
+                return CursorResult.Featured(new DateTime(ticks, DateTimeKind.Utc), id);
+            }
+
+            if (typeToken == "E" && parts.Length == 4)
+            {
+                if (!int.TryParse(parts[1], out var score))
+                    return CursorResult.Invalid();
+                if (!long.TryParse(parts[2], out var ticks) || !int.TryParse(parts[3], out var id))
+                    return CursorResult.Invalid();
+
+                return CursorResult.Engaging(score, new DateTime(ticks, DateTimeKind.Utc), id);
+            }
+
+            return CursorResult.Invalid();
         }
         catch
         {
-            return false;
+            return CursorResult.Invalid();
         }
+    }
+
+    private enum CursorType
+    {
+        Featured,
+        Engaging
+    }
+
+    private readonly record struct CursorResult(
+        bool IsInvalid,
+        CursorType Type,
+        int? Score,
+        DateTime? Time,
+        int? Id)
+    {
+        public static CursorResult Empty() => new(false, CursorType.Featured, null, null, null);
+        public static CursorResult Invalid() => new(true, CursorType.Featured, null, null, null);
+        public static CursorResult Featured(DateTime time, int id) => new(false, CursorType.Featured, null, time, id);
+        public static CursorResult Engaging(int score, DateTime time, int id) => new(false, CursorType.Engaging, score, time, id);
     }
 }

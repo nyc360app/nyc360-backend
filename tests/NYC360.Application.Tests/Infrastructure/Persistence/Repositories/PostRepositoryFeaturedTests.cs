@@ -149,10 +149,8 @@ public class PostRepositoryFeaturedTests
         await dbContext.SaveChangesAsync();
 
         var repository = new PostRepository(dbContext);
-        var result = await repository.GetFeaturedNewsFeedAsync(
+        var result = await repository.GetFeaturedNewsSliceAsync(
             userId: null,
-            pageSize: 10,
-            page: 1,
             cursorTime: featuredB.FeaturedAt,
             cursorId: featuredB.Id,
             take: 10,

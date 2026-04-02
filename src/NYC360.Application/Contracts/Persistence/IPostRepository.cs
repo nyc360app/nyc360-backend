@@ -31,7 +31,8 @@ public interface IPostRepository
     Task<List<PostDto>> GetLatestPostsAsync(Category? division, int? userId, int limit, CancellationToken ct);
     Task<List<PostDto>> GetFeaturedPostsAsync(Category? division, int? userId, int limit, CancellationToken ct);
     Task<List<PostDto>> GetTrendingPostsAsync(Category? division, int? userId, int limit, CancellationToken ct);
-    Task<List<PostDto>> GetFeaturedNewsFeedAsync(int? userId, int pageSize, int page, DateTime? cursorTime, int? cursorId, int take, CancellationToken ct);
+    Task<List<PostDto>> GetFeaturedNewsSliceAsync(int? userId, DateTime? cursorTime, int? cursorId, int take, CancellationToken ct);
+    Task<List<PostDto>> GetEngagingNewsSliceAsync(int? userId, int? cursorScore, DateTime? cursorTime, int? cursorId, int take, CancellationToken ct);
     Task<(List<PostDto>, int)> GetSavedPostsPaginatedAsync(int userId, int page, int pageSize, Category? category, CancellationToken ct);
     
     Task<(List<PostDto>, int)> GetCultureStoriesPaginatedAsync(int? userId, string? tag, string? timeFrame, int? locationId, int page, int pageSize, CancellationToken ct);
