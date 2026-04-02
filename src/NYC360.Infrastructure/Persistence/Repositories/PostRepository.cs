@@ -438,7 +438,7 @@ public sealed class PostRepository(ApplicationDbContext db) : IPostRepository
                 ((p.FeaturedAt ?? p.CreatedAt) == time && p.Id < id));
         }
 
-        var orderedQuery = baseQuery
+        IQueryable<Post> orderedQuery = baseQuery
             .OrderByDescending(p => p.FeaturedAt ?? p.CreatedAt)
             .ThenByDescending(p => p.Id);
 
