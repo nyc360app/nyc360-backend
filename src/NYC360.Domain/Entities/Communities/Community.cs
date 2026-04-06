@@ -17,6 +17,11 @@ public class Community
     public string Description { get; set; } = string.Empty;
     public string? Rules { get; set; }
     public CommunityType? Type { get; set; }
+    public string? CategoryCode { get; set; }
+    public string? DivisionTag { get; set; }
+    public string? Borough { get; set; }
+    public string? Neighborhood { get; set; }
+    public string? ZipCode { get; set; }
     public string? AvatarUrl { get; set; } = string.Empty;
     public string? CoverUrl { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;

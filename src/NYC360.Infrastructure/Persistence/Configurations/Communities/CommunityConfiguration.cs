@@ -15,6 +15,11 @@ public class CommunityConfiguration : IEntityTypeConfiguration<Community>
         builder.Property(c => c.Slug).IsRequired();
         builder.Property(c => c.Description).IsRequired();
         builder.Property(c => c.Rules).HasMaxLength(4000);
+        builder.Property(c => c.CategoryCode).HasMaxLength(1);
+        builder.Property(c => c.DivisionTag).HasMaxLength(50);
+        builder.Property(c => c.Borough).HasMaxLength(50);
+        builder.Property(c => c.Neighborhood).HasMaxLength(100);
+        builder.Property(c => c.ZipCode).HasMaxLength(10);
         builder.Property(c => c.IsActive).HasDefaultValue(true);
         builder.Property(c => c.IsFeatured).HasDefaultValue(false);
 

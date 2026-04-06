@@ -26,6 +26,30 @@ public class CreateCommunityCommandValidator : AbstractValidator<CreateCommunity
             .When(x => !string.IsNullOrWhiteSpace(x.Slug))
             .WithMessage("Slug can only contain lowercase letters, numbers and hyphens.");
 
+        RuleFor(x => x.CategoryCode)
+            .Must(c => new[] { "A", "B", "C", "D", "E" }.Contains(c))
+            .When(x => !string.IsNullOrWhiteSpace(x.CategoryCode))
+            .WithMessage("CategoryCode must be one of: A, B, C, D, E.");
+
+        RuleFor(x => x.DivisionTag)
+            .Must(d => new[] { "community", "culture", "education", "health", "housing", "lifestyle", "legal", "news", "professions", "social", "transportation", "tv" }.Contains(d))
+            .When(x => !string.IsNullOrWhiteSpace(x.DivisionTag))
+            .WithMessage("DivisionTag must be one of the allowed values.");
+
+        RuleFor(x => x.Borough)
+            .NotEmpty()
+            .Must(b => new[] { "Citywide", "Manhattan", "Brooklyn", "Queens", "Bronx", "Staten Island" }.Contains(b))
+            .WithMessage("Borough must be one of: Citywide, Manhattan, Brooklyn, Queens, Bronx, Staten Island.");
+
+        RuleFor(x => x.Neighborhood)
+            .NotEmpty()
+            .MaximumLength(100);
+
+        RuleFor(x => x.ZipCode)
+            .NotEmpty()
+            .Matches(@"^\d{5}$")
+            .WithMessage("ZipCode must be a 5-digit US zip code.");
+
         RuleFor(x => x.AvatarImage)
             .Must(BeValidImage!)
             .When(x => x.AvatarImage != null);
